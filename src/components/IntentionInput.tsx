@@ -5,6 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useNavigate } from 'react-router-dom';
 import { useProjects } from '@/context/ProjectContext';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/context/AuthContext';
 
 const IntentionInput = () => {
   const [intention, setIntention] = useState('');
@@ -12,9 +13,20 @@ const IntentionInput = () => {
   const navigate = useNavigate();
   const { createProject, setCurrentProject } = useProjects();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!user) {
+      toast({
+        title: "Login Required",
+        description: "Please login to create a project",
+        variant: "destructive"
+      });
+      navigate('/login');
+      return;
+    }
     
     if (!intention.trim()) {
       toast({
@@ -56,8 +68,8 @@ const IntentionInput = () => {
         }
       ];
       
-      const projectName = intention.slice(0, 30) + (intention.length > 30 ? '...' : '');
-      const newProject = createProject(projectName, intention, mockFiles);
+      const projectTitle = intention.slice(0, 30) + (intention.length > 30 ? '...' : '');
+      const newProject = await createProject(projectTitle, intention, mockFiles);
       setCurrentProject(newProject);
       
       toast({

@@ -10,13 +10,13 @@ import { toast } from '@/hooks/use-toast';
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const { login, user } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { login, user, isLoading } = useAuth();
   const location = useLocation();
   
   const from = (location.state as any)?.from || '/';
   
-  if (user) {
+  if (user && !isLoading) {
     return <Navigate to={from} replace />;
   }
   
@@ -32,23 +32,15 @@ const LoginPage = () => {
       return;
     }
     
-    setIsLoading(true);
+    setIsSubmitting(true);
     
     try {
       await login(email, password);
-      toast({
-        title: "Success",
-        description: "You've been logged in successfully",
-      });
     } catch (error) {
+      // Error is already handled in the login function
       console.error('Login failed:', error);
-      toast({
-        title: "Login Failed",
-        description: "Invalid email or password",
-        variant: "destructive"
-      });
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -87,8 +79,8 @@ const LoginPage = () => {
             />
           </div>
           
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? 'Logging in...' : 'Log in'}
+          <Button type="submit" className="w-full" disabled={isSubmitting || isLoading}>
+            {isSubmitting ? 'Logging in...' : 'Log in'}
           </Button>
           
           <p className="text-center text-sm text-muted-foreground">

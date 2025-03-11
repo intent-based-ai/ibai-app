@@ -4,10 +4,19 @@ import { useProjects } from '@/context/ProjectContext';
 import ProjectCard from '@/components/ProjectCard';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
 
 const ProjectsPage = () => {
-  const { projects } = useProjects();
-  const { user } = useAuth();
+  const { projects, loading } = useProjects();
+  const { user, isLoading } = useAuth();
+  
+  if (isLoading) {
+    return (
+      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
   
   if (!user) {
     return <Navigate to="/login" />;
@@ -22,7 +31,11 @@ const ProjectsPage = () => {
         </p>
       </div>
       
-      {projects.length === 0 ? (
+      {loading ? (
+        <div className="flex justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : projects.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-xl font-medium mb-4">You don't have any projects yet</p>
           <p className="text-muted-foreground mb-6">

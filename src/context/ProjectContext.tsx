@@ -1,5 +1,8 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
+import { toast } from '@/hooks/use-toast';
 
 type File = {
   id: string;
@@ -11,26 +14,27 @@ type File = {
 
 export type Project = {
   id: string;
-  name: string;
+  title: string;
   description: string;
-  files: File[];
-  createdAt: string;
-  updatedAt: string;
-  customContext?: string;
-  customInstructions?: string;
+  code_files: File[];
+  knowledge_context?: string;
+  knowledge_instructions?: string;
+  created_at: string;
+  updated_at: string;
 };
 
 type ProjectContextType = {
   projects: Project[];
   currentProject: Project | null;
   setCurrentProject: (project: Project | null) => void;
-  saveProject: (project: Project) => void;
-  createProject: (name: string, description: string, files: File[]) => Project;
-  addFile: (projectId: string, file: Omit<File, 'id'>) => void;
-  updateFile: (projectId: string, fileId: string, content: string) => void;
-  deleteFile: (projectId: string, fileId: string) => void;
-  updateProjectContext: (projectId: string, context: string) => void;
-  updateProjectInstructions: (projectId: string, instructions: string) => void;
+  saveProject: (project: Project) => Promise<void>;
+  createProject: (title: string, description: string, files: File[]) => Promise<Project>;
+  addFile: (projectId: string, file: Omit<File, 'id'>) => Promise<void>;
+  updateFile: (projectId: string, fileId: string, content: string) => Promise<void>;
+  deleteFile: (projectId: string, fileId: string) => Promise<void>;
+  updateProjectContext: (projectId: string, context: string) => Promise<void>;
+  updateProjectInstructions: (projectId: string, instructions: string) => Promise<void>;
+  loading: boolean;
 };
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -38,127 +42,370 @@ const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 export const ProjectProvider = ({ children }: { children: React.ReactNode }) => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
-  // Load projects from localStorage
+  // Load projects when user changes
   useEffect(() => {
-    const savedProjects = localStorage.getItem('ib-ai-projects');
-    if (savedProjects) {
-      setProjects(JSON.parse(savedProjects));
-    }
-  }, []);
-
-  // Save projects to localStorage when they change
-  useEffect(() => {
-    if (projects.length > 0) {
-      localStorage.setItem('ib-ai-projects', JSON.stringify(projects));
-    }
-  }, [projects]);
-
-  const saveProject = (project: Project) => {
-    setProjects(prev => {
-      const existingIndex = prev.findIndex(p => p.id === project.id);
-      if (existingIndex >= 0) {
-        const updated = [...prev];
-        updated[existingIndex] = {
-          ...project,
-          updatedAt: new Date().toISOString()
-        };
-        return updated;
-      } else {
-        return [...prev, project];
+    const fetchProjects = async () => {
+      if (!user) {
+        setProjects([]);
+        setLoading(false);
+        return;
       }
-    });
-  };
 
-  const createProject = (name: string, description: string, files: File[]) => {
-    const newProject = {
-      id: crypto.randomUUID(),
-      name,
-      description,
-      files,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('projects')
+          .select('*')
+          .order('updated_at', { ascending: false });
+
+        if (error) throw error;
+
+        setProjects(data || []);
+      } catch (error: any) {
+        console.error('Error fetching projects:', error.message);
+        toast({
+          title: 'Error',
+          description: 'Failed to load projects',
+          variant: 'destructive',
+        });
+      } finally {
+        setLoading(false);
+      }
     };
-    
-    setProjects(prev => [...prev, newProject]);
-    return newProject;
+
+    fetchProjects();
+  }, [user]);
+
+  const saveProject = async (project: Project) => {
+    if (!user) return;
+
+    try {
+      setLoading(true);
+      // Update the project in Supabase
+      const { error } = await supabase
+        .from('projects')
+        .update({
+          title: project.title,
+          description: project.description,
+          code_files: project.code_files,
+          knowledge_context: project.knowledge_context,
+          knowledge_instructions: project.knowledge_instructions,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', project.id);
+
+      if (error) throw error;
+
+      // Update local state
+      setProjects(prev => 
+        prev.map(p => p.id === project.id ? project : p)
+      );
+    } catch (error: any) {
+      console.error('Error saving project:', error.message);
+      toast({
+        title: 'Error',
+        description: 'Failed to save project',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const addFile = (projectId: string, file: Omit<File, 'id'>) => {
-    setProjects(prev => 
-      prev.map(project => {
-        if (project.id === projectId) {
-          return {
-            ...project,
-            files: [...project.files, { ...file, id: crypto.randomUUID() }],
-            updatedAt: new Date().toISOString()
-          };
-        }
-        return project;
-      })
-    );
+  const createProject = async (title: string, description: string, files: File[]) => {
+    if (!user) throw new Error('User not authenticated');
+
+    try {
+      setLoading(true);
+      const newProject = {
+        title,
+        description,
+        code_files: files,
+        user_id: user.id,
+      };
+
+      const { data, error } = await supabase
+        .from('projects')
+        .insert(newProject)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Add to local state
+      const createdProject = data as Project;
+      setProjects(prev => [createdProject, ...prev]);
+      
+      return createdProject;
+    } catch (error: any) {
+      console.error('Error creating project:', error.message);
+      toast({
+        title: 'Error',
+        description: 'Failed to create project',
+        variant: 'destructive',
+      });
+      throw error;
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const updateFile = (projectId: string, fileId: string, content: string) => {
-    setProjects(prev => 
-      prev.map(project => {
-        if (project.id === projectId) {
-          return {
-            ...project,
-            files: project.files.map(file => 
-              file.id === fileId ? { ...file, content } : file
-            ),
-            updatedAt: new Date().toISOString()
-          };
-        }
-        return project;
-      })
-    );
+  const addFile = async (projectId: string, file: Omit<File, 'id'>) => {
+    if (!user) return;
+
+    try {
+      setLoading(true);
+      
+      // Get current project
+      const project = projects.find(p => p.id === projectId);
+      if (!project) throw new Error('Project not found');
+      
+      // Create new file with ID
+      const newFile = { ...file, id: crypto.randomUUID() };
+      
+      // Add file to project
+      const updatedFiles = [...project.code_files, newFile];
+      
+      // Update project in Supabase
+      const { error } = await supabase
+        .from('projects')
+        .update({
+          code_files: updatedFiles,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', projectId);
+
+      if (error) throw error;
+      
+      // Update local state
+      const updatedProject = {
+        ...project,
+        code_files: updatedFiles,
+        updated_at: new Date().toISOString()
+      };
+      
+      setProjects(prev => 
+        prev.map(p => p.id === projectId ? updatedProject : p)
+      );
+      
+      if (currentProject?.id === projectId) {
+        setCurrentProject(updatedProject);
+      }
+    } catch (error: any) {
+      console.error('Error adding file:', error.message);
+      toast({
+        title: 'Error',
+        description: 'Failed to add file',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const deleteFile = (projectId: string, fileId: string) => {
-    setProjects(prev => 
-      prev.map(project => {
-        if (project.id === projectId) {
-          return {
-            ...project,
-            files: project.files.filter(file => file.id !== fileId),
-            updatedAt: new Date().toISOString()
-          };
-        }
-        return project;
-      })
-    );
+  const updateFile = async (projectId: string, fileId: string, content: string) => {
+    if (!user) return;
+
+    try {
+      setLoading(true);
+      
+      // Get current project
+      const project = projects.find(p => p.id === projectId);
+      if (!project) throw new Error('Project not found');
+      
+      // Update file content
+      const updatedFiles = project.code_files.map(file => 
+        file.id === fileId ? { ...file, content } : file
+      );
+      
+      // Update project in Supabase
+      const { error } = await supabase
+        .from('projects')
+        .update({
+          code_files: updatedFiles,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', projectId);
+
+      if (error) throw error;
+      
+      // Update local state
+      const updatedProject = {
+        ...project,
+        code_files: updatedFiles,
+        updated_at: new Date().toISOString()
+      };
+      
+      setProjects(prev => 
+        prev.map(p => p.id === projectId ? updatedProject : p)
+      );
+      
+      if (currentProject?.id === projectId) {
+        setCurrentProject(updatedProject);
+      }
+    } catch (error: any) {
+      console.error('Error updating file:', error.message);
+      toast({
+        title: 'Error',
+        description: 'Failed to update file',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const updateProjectContext = (projectId: string, context: string) => {
-    setProjects(prev => 
-      prev.map(project => {
-        if (project.id === projectId) {
-          return {
-            ...project,
-            customContext: context,
-            updatedAt: new Date().toISOString()
-          };
-        }
-        return project;
-      })
-    );
+  const deleteFile = async (projectId: string, fileId: string) => {
+    if (!user) return;
+
+    try {
+      setLoading(true);
+      
+      // Get current project
+      const project = projects.find(p => p.id === projectId);
+      if (!project) throw new Error('Project not found');
+      
+      // Remove file
+      const updatedFiles = project.code_files.filter(file => file.id !== fileId);
+      
+      // Update project in Supabase
+      const { error } = await supabase
+        .from('projects')
+        .update({
+          code_files: updatedFiles,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', projectId);
+
+      if (error) throw error;
+      
+      // Update local state
+      const updatedProject = {
+        ...project,
+        code_files: updatedFiles,
+        updated_at: new Date().toISOString()
+      };
+      
+      setProjects(prev => 
+        prev.map(p => p.id === projectId ? updatedProject : p)
+      );
+      
+      if (currentProject?.id === projectId) {
+        setCurrentProject(updatedProject);
+      }
+    } catch (error: any) {
+      console.error('Error deleting file:', error.message);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete file',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const updateProjectInstructions = (projectId: string, instructions: string) => {
-    setProjects(prev => 
-      prev.map(project => {
-        if (project.id === projectId) {
-          return {
-            ...project,
-            customInstructions: instructions,
-            updatedAt: new Date().toISOString()
-          };
-        }
-        return project;
-      })
-    );
+  const updateProjectContext = async (projectId: string, context: string) => {
+    if (!user) return;
+
+    try {
+      setLoading(true);
+      
+      // Update project in Supabase
+      const { error } = await supabase
+        .from('projects')
+        .update({
+          knowledge_context: context,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', projectId);
+
+      if (error) throw error;
+      
+      // Update local state
+      setProjects(prev => 
+        prev.map(project => {
+          if (project.id === projectId) {
+            return {
+              ...project,
+              knowledge_context: context,
+              updated_at: new Date().toISOString()
+            };
+          }
+          return project;
+        })
+      );
+      
+      if (currentProject?.id === projectId) {
+        setCurrentProject(prev => prev ? {
+          ...prev,
+          knowledge_context: context,
+          updated_at: new Date().toISOString()
+        } : null);
+      }
+    } catch (error: any) {
+      console.error('Error updating project context:', error.message);
+      toast({
+        title: 'Error',
+        description: 'Failed to update project context',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateProjectInstructions = async (projectId: string, instructions: string) => {
+    if (!user) return;
+
+    try {
+      setLoading(true);
+      
+      // Update project in Supabase
+      const { error } = await supabase
+        .from('projects')
+        .update({
+          knowledge_instructions: instructions,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', projectId);
+
+      if (error) throw error;
+      
+      // Update local state
+      setProjects(prev => 
+        prev.map(project => {
+          if (project.id === projectId) {
+            return {
+              ...project,
+              knowledge_instructions: instructions,
+              updated_at: new Date().toISOString()
+            };
+          }
+          return project;
+        })
+      );
+      
+      if (currentProject?.id === projectId) {
+        setCurrentProject(prev => prev ? {
+          ...prev,
+          knowledge_instructions: instructions,
+          updated_at: new Date().toISOString()
+        } : null);
+      }
+    } catch (error: any) {
+      console.error('Error updating project instructions:', error.message);
+      toast({
+        title: 'Error',
+        description: 'Failed to update project instructions',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -173,7 +420,8 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
         updateFile,
         deleteFile,
         updateProjectContext,
-        updateProjectInstructions
+        updateProjectInstructions,
+        loading
       }}
     >
       {children}

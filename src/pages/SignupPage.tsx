@@ -11,10 +11,10 @@ const SignupPage = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const { login, user } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { signup, user, isLoading } = useAuth();
   
-  if (user) {
+  if (user && !isLoading) {
     return <Navigate to="/" />;
   }
   
@@ -30,25 +30,24 @@ const SignupPage = () => {
       return;
     }
     
-    setIsLoading(true);
-    
-    try {
-      // In a real app, this would be a signup API call followed by login
-      // For now, we just log in the user with the provided email
-      await login(email, password);
+    if (password.length < 6) {
       toast({
-        title: "Account Created",
-        description: "Your account has been created successfully",
-      });
-    } catch (error) {
-      console.error('Signup failed:', error);
-      toast({
-        title: "Signup Failed",
-        description: "An error occurred during signup",
+        title: "Error",
+        description: "Password must be at least 6 characters",
         variant: "destructive"
       });
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      await signup(email, password, name);
+    } catch (error) {
+      // Error is already handled in the signup function
+      console.error('Signup failed:', error);
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -98,8 +97,8 @@ const SignupPage = () => {
             />
           </div>
           
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? 'Creating account...' : 'Sign up'}
+          <Button type="submit" className="w-full" disabled={isSubmitting || isLoading}>
+            {isSubmitting ? 'Creating account...' : 'Sign up'}
           </Button>
           
           <p className="text-center text-sm text-muted-foreground">

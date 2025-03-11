@@ -1,71 +1,167 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { Session, User } from '@supabase/supabase-js';
+import { toast } from '@/hooks/use-toast';
 
-type User = {
+type AuthUser = {
   id: string;
-  name: string;
+  name: string | null;
   email: string;
 } | null;
 
 type AuthContextType = {
-  user: User;
+  user: AuthUser;
+  session: Session | null;
   login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  signup: (email: string, password: string, name: string) => Promise<void>;
+  logout: () => Promise<void>;
   isLoading: boolean;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<User>(null);
+  const [user, setUser] = useState<AuthUser>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Check for existing session on mount
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        // In a real app, you would check for a valid token/session here
-        const savedUser = localStorage.getItem('ib-ai-user');
-        if (savedUser) {
-          setUser(JSON.parse(savedUser));
-        }
-      } catch (error) {
-        console.error('Auth check failed:', error);
-      } finally {
-        setIsLoading(false);
+    // Check for active session on mount
+    const initializeAuth = async () => {
+      setIsLoading(true);
+      
+      // Get session data
+      const { data: { session } } = await supabase.auth.getSession();
+      setSession(session);
+      
+      if (session?.user) {
+        const { id, email } = session.user;
+        
+        // Get user profile from the profiles table
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('name')
+          .eq('id', id)
+          .single();
+          
+        setUser({
+          id,
+          email: email || '',
+          name: profile?.name
+        });
       }
+      
+      setIsLoading(false);
     };
 
-    checkAuth();
+    initializeAuth();
+
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      setSession(session);
+      
+      if (session?.user) {
+        const { id, email } = session.user;
+        
+        // Get user profile data
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('name')
+          .eq('id', id)
+          .single();
+          
+        setUser({
+          id,
+          email: email || '',
+          name: profile?.name
+        });
+      } else {
+        setUser(null);
+      }
+      
+      setIsLoading(false);
+    });
+
+    // Cleanup subscription on unmount
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const signup = async (email: string, password: string, name: string) => {
     setIsLoading(true);
+    
     try {
-      // In a real app, this would make an API call
-      // This is just for demo purposes
-      const mockUser = {
-        id: '1',
-        name: 'Demo User',
-        email: email
-      };
-      setUser(mockUser);
-      localStorage.setItem('ib-ai-user', JSON.stringify(mockUser));
-    } catch (error) {
-      console.error('Login failed:', error);
+      const { error } = await supabase.auth.signUp({ 
+        email, 
+        password,
+        options: {
+          data: {
+            name
+          }
+        }
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Account created",
+        description: "Please check your email to confirm your account",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Signup failed",
+        description: error.message || "An error occurred during signup",
+        variant: "destructive"
+      });
       throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('ib-ai-user');
+  const login = async (email: string, password: string) => {
+    setIsLoading(true);
+    
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Welcome back!",
+        description: "You've been logged in successfully",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Login failed",
+        description: error.message || "Invalid email or password",
+        variant: "destructive"
+      });
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const logout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      setUser(null);
+      setSession(null);
+    } catch (error: any) {
+      toast({
+        title: "Error signing out",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, session, login, signup, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );
