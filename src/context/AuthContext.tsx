@@ -125,9 +125,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setIsLoading(true);
     
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await supabase.auth.signInWithPassword({ 
+        email, 
+        password 
+      });
       
       if (error) throw error;
+      
+      // Make sure we have a successful login with a session
+      if (!data.session) {
+        throw new Error("Failed to get session after login");
+      }
       
       toast({
         title: "Welcome back!",
@@ -147,16 +155,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const logout = async () => {
     try {
+      setIsLoading(true);
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       setUser(null);
       setSession(null);
+      
+      toast({
+        title: "Logged out",
+        description: "You've been logged out successfully",
+      });
     } catch (error: any) {
       toast({
         title: "Error signing out",
         description: error.message,
         variant: "destructive"
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 

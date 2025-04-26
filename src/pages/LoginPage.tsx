@@ -36,11 +36,13 @@ const LoginPage = () => {
     
     try {
       await login(email, password);
+      // Successfully logged in, the redirect will happen automatically
+      // because of the conditional render above when user state changes
     } catch (error) {
       // Error is already handled in the login function
       console.error('Login failed:', error);
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false); // Ensure we reset the submitting state regardless of outcome
     }
   };
 
