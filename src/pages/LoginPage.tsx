@@ -1,10 +1,10 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 
 const LoginPage = () => {
@@ -17,14 +17,7 @@ const LoginPage = () => {
   
   const from = (location.state as any)?.from || '/';
   
-  // Check if user is already logged in and redirect
-  useEffect(() => {
-    if (user && session) {
-      console.log('User is already logged in, redirecting to:', from);
-      navigate(from, { replace: true });
-    }
-  }, [user, session, from, navigate]);
-  
+  // Handle login submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -38,31 +31,47 @@ const LoginPage = () => {
     }
     
     setIsSubmitting(true);
-    console.log('Submitting login form...');
+    console.log('Submitting login form with email:', email);
     
     try {
       await login(email, password);
-      console.log('Login function completed successfully');
+      console.log('Login completed, user object:', user);
       
-      // After successful login, we'll redirect in the useEffect above
-    } catch (error) {
+      // Redirect after successful login
+      navigate(from, { replace: true });
+    } catch (error: any) {
       console.error('Login failed:', error);
-      // Error is already handled in the login function
+      toast({
+        title: "Login failed",
+        description: error.message || "Invalid email or password",
+        variant: "destructive"
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Show loading state while checking authentication
-  if (isLoading && !isSubmitting) {
+  // Redirect if already logged in
+  React.useEffect(() => {
+    if (user && session) {
+      console.log('User already logged in, redirecting to:', from);
+      navigate(from, { replace: true });
+    }
+  }, [user, session, from, navigate]);
+
+  // Show form instead of loading state
+  if (isLoading && !user && !isSubmitting) {
     return (
       <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
-        <p className="text-muted-foreground">Checking authentication...</p>
+        <div className="text-center">
+          <p className="text-muted-foreground mb-2">Checking authentication...</p>
+          <Button variant="outline" onClick={() => window.location.reload()}>
+            Refresh Page
+          </Button>
+        </div>
       </div>
     );
   }
-
-  // If already logged in, we'll redirect via the useEffect
   
   return (
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">

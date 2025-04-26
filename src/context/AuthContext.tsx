@@ -28,36 +28,50 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
       console.log('Auth state changed:', event, newSession?.user?.email);
+      
+      // Simple synchronous updates first
       setSession(newSession);
       
       if (newSession?.user) {
         const { id, email } = newSession.user;
         
-        // Get user profile data
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('name')
-          .eq('id', id)
-          .single();
-          
-        setUser({
-          id,
-          email: email || '',
-          name: profile?.name
-        });
+        // Get user profile data separately to avoid deadlock
+        setTimeout(async () => {
+          try {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('name')
+              .eq('id', id)
+              .single();
+              
+            setUser({
+              id,
+              email: email || '',
+              name: profile?.name
+            });
+          } catch (error) {
+            console.error('Error fetching user profile:', error);
+            // Still set basic user info even if profile fetch fails
+            setUser({
+              id,
+              email: email || '',
+              name: null
+            });
+          } finally {
+            setIsLoading(false);
+          }
+        }, 0);
       } else {
         setUser(null);
+        setIsLoading(false);
       }
-      
-      setIsLoading(false);
     });
 
     // THEN check for existing session
     const initializeAuth = async () => {
       try {
-        // Get session data
         const { data: { session: currentSession } } = await supabase.auth.getSession();
         
         console.log('Initial session check:', currentSession?.user?.email);
@@ -65,28 +79,40 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (currentSession?.user) {
           const { id, email } = currentSession.user;
           
-          // Get user profile from the profiles table
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('name')
-            .eq('id', id)
-            .single();
-            
-          setUser({
-            id,
-            email: email || '',
-            name: profile?.name
-          });
+          // Get user profile and set the session
+          try {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('name')
+              .eq('id', id)
+              .single();
+              
+            setUser({
+              id,
+              email: email || '',
+              name: profile?.name
+            });
+          } catch (profileError) {
+            console.error('Error fetching initial profile:', profileError);
+            // Set basic user info even if profile fetch fails
+            setUser({
+              id,
+              email: email || '',
+              name: null
+            });
+          }
           
           setSession(currentSession);
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
       } finally {
+        // Ensure loading state is updated regardless of success or failure
         setIsLoading(false);
       }
     };
 
+    // Initialize auth state
     initializeAuth();
 
     // Cleanup subscription on unmount
@@ -148,21 +174,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         throw new Error("Failed to get session after login");
       }
       
-      console.log('Login successful, got session for:', data.user?.email);
+      console.log('Login successful for:', data.user?.email);
       
-      // Set session and user right away to help with redirection
+      // Update the session immediately
       setSession(data.session);
       
       if (data.user) {
         const { id, email } = data.user;
         
-        // Get user profile 
+        // Set basic user info immediately
+        setUser({
+          id,
+          email: email || '',
+          name: null // Will be populated later
+        });
+        
+        // Get user profile in a separate call
         const { data: profile } = await supabase
           .from('profiles')
           .select('name')
           .eq('id', id)
           .single();
           
+        // Update with full user info including profile
         setUser({
           id,
           email: email || '',
@@ -174,6 +208,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         title: "Welcome back!",
         description: "You've been logged in successfully",
       });
+      
+      return data;
     } catch (error: any) {
       toast({
         title: "Login failed",
