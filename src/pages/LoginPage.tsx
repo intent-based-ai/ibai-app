@@ -1,24 +1,29 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Link, Navigate, useLocation } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { login, user, isLoading } = useAuth();
+  const { login, user, session, isLoading } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   
   const from = (location.state as any)?.from || '/';
   
-  if (user && !isLoading) {
-    return <Navigate to={from} replace />;
-  }
+  // Check if user is already logged in and redirect
+  useEffect(() => {
+    if (user && session) {
+      console.log('User is already logged in, redirecting to:', from);
+      navigate(from, { replace: true });
+    }
+  }, [user, session, from, navigate]);
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,19 +38,32 @@ const LoginPage = () => {
     }
     
     setIsSubmitting(true);
+    console.log('Submitting login form...');
     
     try {
       await login(email, password);
-      // Successfully logged in, the redirect will happen automatically
-      // because of the conditional render above when user state changes
+      console.log('Login function completed successfully');
+      
+      // After successful login, we'll redirect in the useEffect above
     } catch (error) {
-      // Error is already handled in the login function
       console.error('Login failed:', error);
+      // Error is already handled in the login function
     } finally {
-      setIsSubmitting(false); // Ensure we reset the submitting state regardless of outcome
+      setIsSubmitting(false);
     }
   };
 
+  // Show loading state while checking authentication
+  if (isLoading && !isSubmitting) {
+    return (
+      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
+        <p className="text-muted-foreground">Checking authentication...</p>
+      </div>
+    );
+  }
+
+  // If already logged in, we'll redirect via the useEffect
+  
   return (
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
       <div className="w-full max-w-md p-8">
