@@ -6,6 +6,9 @@ import { useNavigate } from 'react-router-dom';
 import { useProjects } from '@/context/ProjectContext';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
+import { Plus } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import PromptTemplates from './PromptTemplates';
 
 const IntentionInput = () => {
   const [intention, setIntention] = useState('');
@@ -92,23 +95,48 @@ const IntentionInput = () => {
 
   return (
     <div className="w-full max-w-2xl mx-auto">
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="relative">
         <Textarea
           placeholder="Type your intention here... (e.g., 'Create a todo app with React and local storage')"
           value={intention}
           onChange={(e) => setIntention(e.target.value)}
-          className="min-h-[150px] p-4 text-lg resize-y"
+          className="min-h-[120px] pr-24 resize-none text-lg"
         />
-        <Button 
-          type="submit" 
-          className="w-full"
-          disabled={isLoading}
-        >
-          {isLoading ? 'Generating...' : 'Generate Project'}
-        </Button>
-      </form>
+        <div className="absolute bottom-3 right-3 flex items-center gap-2">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  disabled={isLoading}
+                >
+                  <Plus className="h-5 w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Add attachment</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  onClick={handleSubmit}
+                  disabled={isLoading}
+                  size="sm"
+                  className="h-8"
+                >
+                  {isLoading ? 'Generating...' : 'Generate Project'}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Create a new project</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+      </div>
+      <PromptTemplates onSelectTemplate={setIntention} />
     </div>
   );
 };
 
 export default IntentionInput;
+
