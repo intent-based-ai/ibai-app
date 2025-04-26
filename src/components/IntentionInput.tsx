@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -93,6 +94,7 @@ const IntentionInput = () => {
     }
   };
 
+  // This function will update the placeholder text as templates rotate
   const handleTemplatePlaceholderChange = (description: string) => {
     setPlaceholder(description);
   };
