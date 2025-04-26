@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import IntentionInput from '@/components/IntentionInput';
 import { useAuth } from '@/context/AuthContext';
 import { useProjects } from '@/context/ProjectContext';
@@ -9,6 +9,28 @@ const HomePage = () => {
   const { user } = useAuth();
   const { projects } = useProjects();
   const recentProjects = user ? projects.slice(0, 4) : [];
+  
+  const subheadings = [
+    "Just describe what you want to build, and our AI will generate the code for you.",
+    "Deliver faster, adapt faster, and crush the gap between vision and reality.",
+    "Our engine reads your goals and builds dynamic, self-adjusting workflows that think and act in real-time.",
+    "One idea in. One intelligent agent out. We make your workflows smarter, faster, and ready to scale — it's next-level autonomy."
+  ];
+  
+  const [currentSubheadingIndex, setCurrentSubheadingIndex] = useState(0);
+  const [isChanging, setIsChanging] = useState(false);
+  
+  useEffect(() => {
+    const rotateInterval = setInterval(() => {
+      setIsChanging(true);
+      setTimeout(() => {
+        setCurrentSubheadingIndex((prevIndex) => (prevIndex + 1) % subheadings.length);
+        setIsChanging(false);
+      }, 500); // Wait for fade out animation before changing text
+    }, 5000); // Change every 5 seconds
+    
+    return () => clearInterval(rotateInterval);
+  }, []);
 
   return (
     <div className="min-h-[calc(100vh-4rem)] flex flex-col">
@@ -18,8 +40,8 @@ const HomePage = () => {
             <h1 className="text-4xl font-bold mb-4">
               Transform your ideas into code with IB-AI
             </h1>
-            <p className="text-lg">
-              Just describe what you want to build, and our AI will generate the code for you.
+            <p className={`text-lg transition-opacity duration-500 ${isChanging ? 'opacity-0' : 'opacity-100'}`}>
+              {subheadings[currentSubheadingIndex]}
             </p>
           </div>
           

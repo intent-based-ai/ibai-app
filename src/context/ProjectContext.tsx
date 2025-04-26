@@ -16,9 +16,12 @@ export type Project = {
   id: string;
   title: string;
   description: string;
-  code_files: File[];
+  files: File[];  // Changed from code_files to files
   knowledge_context?: string;
   knowledge_instructions?: string;
+  customContext?: string;  // Added alias for knowledge_context
+  customInstructions?: string;  // Added alias for knowledge_instructions
+  name?: string;  // Added alias for title
   created_at: string;
   updated_at: string;
 };
@@ -63,7 +66,22 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
 
         if (error) throw error;
 
-        setProjects(data || []);
+        // Transform data from Supabase to match our Project type
+        const transformedProjects = (data || []).map((project: any) => ({
+          id: project.id,
+          title: project.title,
+          description: project.description,
+          files: project.code_files || [],
+          name: project.title, // Add alias
+          knowledge_context: project.knowledge_context || '',
+          knowledge_instructions: project.knowledge_instructions || '',
+          customContext: project.knowledge_context || '', // Add alias
+          customInstructions: project.knowledge_instructions || '', // Add alias
+          created_at: project.created_at,
+          updated_at: project.updated_at
+        }));
+
+        setProjects(transformedProjects);
       } catch (error: any) {
         console.error('Error fetching projects:', error.message);
         toast({
@@ -123,7 +141,7 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
       const newProject = {
         title,
         description,
-        code_files: files,
+        code_files: files, // Note: in DB it's still code_files
         user_id: user.id,
       };
 
@@ -135,8 +153,21 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
 
       if (error) throw error;
 
-      // Add to local state
-      const createdProject = data as Project;
+      // Add to local state with transformed properties
+      const createdProject: Project = {
+        id: data.id,
+        title: data.title,
+        description: data.description,
+        name: data.title, // Add alias
+        files: data.code_files || [], // Transform to files
+        knowledge_context: data.knowledge_context || '',
+        knowledge_instructions: data.knowledge_instructions || '',
+        customContext: data.knowledge_context || '', // Add alias
+        customInstructions: data.knowledge_instructions || '', // Add alias
+        created_at: data.created_at,
+        updated_at: data.updated_at
+      };
+      
       setProjects(prev => [createdProject, ...prev]);
       
       return createdProject;
@@ -167,13 +198,13 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
       const newFile = { ...file, id: crypto.randomUUID() };
       
       // Add file to project
-      const updatedFiles = [...project.code_files, newFile];
+      const updatedFiles = [...project.files, newFile];
       
       // Update project in Supabase
       const { error } = await supabase
         .from('projects')
         .update({
-          code_files: updatedFiles,
+          code_files: updatedFiles, // Note: in DB it's still code_files
           updated_at: new Date().toISOString()
         })
         .eq('id', projectId);
@@ -183,7 +214,7 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
       // Update local state
       const updatedProject = {
         ...project,
-        code_files: updatedFiles,
+        files: updatedFiles,
         updated_at: new Date().toISOString()
       };
       
@@ -217,7 +248,7 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
       if (!project) throw new Error('Project not found');
       
       // Update file content
-      const updatedFiles = project.code_files.map(file => 
+      const updatedFiles = project.files.map(file => 
         file.id === fileId ? { ...file, content } : file
       );
       
@@ -225,7 +256,7 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
       const { error } = await supabase
         .from('projects')
         .update({
-          code_files: updatedFiles,
+          code_files: updatedFiles, // Note: in DB it's still code_files
           updated_at: new Date().toISOString()
         })
         .eq('id', projectId);
@@ -235,7 +266,7 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
       // Update local state
       const updatedProject = {
         ...project,
-        code_files: updatedFiles,
+        files: updatedFiles,
         updated_at: new Date().toISOString()
       };
       
@@ -269,13 +300,13 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
       if (!project) throw new Error('Project not found');
       
       // Remove file
-      const updatedFiles = project.code_files.filter(file => file.id !== fileId);
+      const updatedFiles = project.files.filter(file => file.id !== fileId);
       
       // Update project in Supabase
       const { error } = await supabase
         .from('projects')
         .update({
-          code_files: updatedFiles,
+          code_files: updatedFiles, // Note: in DB it's still code_files
           updated_at: new Date().toISOString()
         })
         .eq('id', projectId);
@@ -285,7 +316,7 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
       // Update local state
       const updatedProject = {
         ...project,
-        code_files: updatedFiles,
+        files: updatedFiles,
         updated_at: new Date().toISOString()
       };
       
@@ -332,6 +363,7 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
             return {
               ...project,
               knowledge_context: context,
+              customContext: context, // Update alias
               updated_at: new Date().toISOString()
             };
           }
@@ -343,6 +375,7 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
         setCurrentProject(prev => prev ? {
           ...prev,
           knowledge_context: context,
+          customContext: context, // Update alias
           updated_at: new Date().toISOString()
         } : null);
       }
@@ -382,6 +415,7 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
             return {
               ...project,
               knowledge_instructions: instructions,
+              customInstructions: instructions, // Update alias
               updated_at: new Date().toISOString()
             };
           }
@@ -393,6 +427,7 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
         setCurrentProject(prev => prev ? {
           ...prev,
           knowledge_instructions: instructions,
+          customInstructions: instructions, // Update alias
           updated_at: new Date().toISOString()
         } : null);
       }
