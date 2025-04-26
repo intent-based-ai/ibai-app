@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
@@ -48,7 +47,6 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
-  // Load projects when user changes
   useEffect(() => {
     const fetchProjects = async () => {
       if (!user) {
@@ -66,17 +64,16 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
 
         if (error) throw error;
 
-        // Transform data from Supabase to match our Project type
         const transformedProjects = (data || []).map((project: any) => ({
           id: project.id,
           title: project.title,
           description: project.description,
           files: project.code_files || [],
-          name: project.title, // Add alias
+          name: project.title,
           knowledge_context: project.knowledge_context || '',
           knowledge_instructions: project.knowledge_instructions || '',
-          customContext: project.knowledge_context || '', // Add alias
-          customInstructions: project.knowledge_instructions || '', // Add alias
+          customContext: project.knowledge_context || '',
+          customInstructions: project.knowledge_instructions || '',
           created_at: project.created_at,
           updated_at: project.updated_at
         }));
@@ -102,13 +99,12 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
 
     try {
       setLoading(true);
-      // Update the project in Supabase
       const { error } = await supabase
         .from('projects')
         .update({
           title: project.title,
           description: project.description,
-          code_files: project.code_files,
+          code_files: project.files,
           knowledge_context: project.knowledge_context,
           knowledge_instructions: project.knowledge_instructions,
           updated_at: new Date().toISOString()
@@ -117,7 +113,6 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
 
       if (error) throw error;
 
-      // Update local state
       setProjects(prev => 
         prev.map(p => p.id === project.id ? project : p)
       );
@@ -141,7 +136,7 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
       const newProject = {
         title,
         description,
-        code_files: files, // Note: in DB it's still code_files
+        code_files: files,
         user_id: user.id,
       };
 
@@ -153,17 +148,16 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
 
       if (error) throw error;
 
-      // Add to local state with transformed properties
       const createdProject: Project = {
         id: data.id,
         title: data.title,
         description: data.description,
-        name: data.title, // Add alias
-        files: data.code_files || [], // Transform to files
+        name: data.title,
+        files: data.code_files || [],
         knowledge_context: data.knowledge_context || '',
         knowledge_instructions: data.knowledge_instructions || '',
-        customContext: data.knowledge_context || '', // Add alias
-        customInstructions: data.knowledge_instructions || '', // Add alias
+        customContext: data.knowledge_context || '',
+        customInstructions: data.knowledge_instructions || '',
         created_at: data.created_at,
         updated_at: data.updated_at
       };
@@ -190,28 +184,23 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
     try {
       setLoading(true);
       
-      // Get current project
       const project = projects.find(p => p.id === projectId);
       if (!project) throw new Error('Project not found');
       
-      // Create new file with ID
       const newFile = { ...file, id: crypto.randomUUID() };
       
-      // Add file to project
       const updatedFiles = [...project.files, newFile];
       
-      // Update project in Supabase
       const { error } = await supabase
         .from('projects')
         .update({
-          code_files: updatedFiles, // Note: in DB it's still code_files
+          code_files: updatedFiles,
           updated_at: new Date().toISOString()
         })
         .eq('id', projectId);
 
       if (error) throw error;
       
-      // Update local state
       const updatedProject = {
         ...project,
         files: updatedFiles,
@@ -243,27 +232,23 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
     try {
       setLoading(true);
       
-      // Get current project
       const project = projects.find(p => p.id === projectId);
       if (!project) throw new Error('Project not found');
       
-      // Update file content
       const updatedFiles = project.files.map(file => 
         file.id === fileId ? { ...file, content } : file
       );
       
-      // Update project in Supabase
       const { error } = await supabase
         .from('projects')
         .update({
-          code_files: updatedFiles, // Note: in DB it's still code_files
+          code_files: updatedFiles,
           updated_at: new Date().toISOString()
         })
         .eq('id', projectId);
 
       if (error) throw error;
       
-      // Update local state
       const updatedProject = {
         ...project,
         files: updatedFiles,
@@ -295,25 +280,21 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
     try {
       setLoading(true);
       
-      // Get current project
       const project = projects.find(p => p.id === projectId);
       if (!project) throw new Error('Project not found');
       
-      // Remove file
       const updatedFiles = project.files.filter(file => file.id !== fileId);
       
-      // Update project in Supabase
       const { error } = await supabase
         .from('projects')
         .update({
-          code_files: updatedFiles, // Note: in DB it's still code_files
+          code_files: updatedFiles,
           updated_at: new Date().toISOString()
         })
         .eq('id', projectId);
 
       if (error) throw error;
       
-      // Update local state
       const updatedProject = {
         ...project,
         files: updatedFiles,
@@ -345,7 +326,6 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
     try {
       setLoading(true);
       
-      // Update project in Supabase
       const { error } = await supabase
         .from('projects')
         .update({
@@ -356,14 +336,13 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
 
       if (error) throw error;
       
-      // Update local state
       setProjects(prev => 
         prev.map(project => {
           if (project.id === projectId) {
             return {
               ...project,
               knowledge_context: context,
-              customContext: context, // Update alias
+              customContext: context,
               updated_at: new Date().toISOString()
             };
           }
@@ -375,7 +354,7 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
         setCurrentProject(prev => prev ? {
           ...prev,
           knowledge_context: context,
-          customContext: context, // Update alias
+          customContext: context,
           updated_at: new Date().toISOString()
         } : null);
       }
@@ -397,7 +376,6 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
     try {
       setLoading(true);
       
-      // Update project in Supabase
       const { error } = await supabase
         .from('projects')
         .update({
@@ -408,14 +386,13 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
 
       if (error) throw error;
       
-      // Update local state
       setProjects(prev => 
         prev.map(project => {
           if (project.id === projectId) {
             return {
               ...project,
               knowledge_instructions: instructions,
-              customInstructions: instructions, // Update alias
+              customInstructions: instructions,
               updated_at: new Date().toISOString()
             };
           }
@@ -427,7 +404,7 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
         setCurrentProject(prev => prev ? {
           ...prev,
           knowledge_instructions: instructions,
-          customInstructions: instructions, // Update alias
+          customInstructions: instructions,
           updated_at: new Date().toISOString()
         } : null);
       }
