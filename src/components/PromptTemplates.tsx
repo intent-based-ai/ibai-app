@@ -1,8 +1,15 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { CircleChevronRight } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselPrevious,
+  CarouselNext,
+} from "@/components/ui/carousel";
 
 interface PromptTemplate {
   summary: string;
@@ -30,43 +37,51 @@ const templates: PromptTemplate[] = [
 
 interface PromptTemplatesProps {
   onSelectTemplate: (description: string) => void;
+  onTemplateChange: (description: string) => void;
 }
 
-const PromptTemplates: React.FC<PromptTemplatesProps> = ({ onSelectTemplate }) => {
+const PromptTemplates: React.FC<PromptTemplatesProps> = ({ onSelectTemplate, onTemplateChange }) => {
   const [currentIndex, setCurrentIndex] = React.useState(0);
 
-  const handleRotate = () => {
-    setCurrentIndex((prev) => (prev + 1) % templates.length);
-  };
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => {
+        const nextIndex = (prev + 1) % templates.length;
+        onTemplateChange(templates[nextIndex].description);
+        return nextIndex;
+      });
+    }, 5000); // Rotate every 5 seconds
+
+    return () => clearInterval(interval);
+  }, [onTemplateChange]);
 
   return (
     <div className="flex items-center gap-2 mt-2">
       <span className="text-sm text-muted-foreground">Prompt templates:</span>
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="outline"
-              className="text-sm"
-              onClick={() => onSelectTemplate(templates[currentIndex].description)}
-            >
-              {templates[currentIndex].summary}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>{templates[currentIndex].description}</TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="p-0 h-8 w-8"
-        onClick={handleRotate}
-      >
-        <CircleChevronRight className="h-5 w-5" />
-      </Button>
+      <Carousel className="max-w-xs">
+        <CarouselContent>
+          {templates.map((template, index) => (
+            <CarouselItem key={index} className={index === currentIndex ? 'block' : 'hidden'}>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="text-sm"
+                      onClick={() => onSelectTemplate(template.description)}
+                    >
+                      {template.summary}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>{template.description}</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+      </Carousel>
     </div>
   );
 };
 
 export default PromptTemplates;
-

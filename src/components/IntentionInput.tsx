@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -12,6 +11,7 @@ import PromptTemplates from './PromptTemplates';
 
 const IntentionInput = () => {
   const [intention, setIntention] = useState('');
+  const [placeholder, setPlaceholder] = useState('Type your intention here... (e.g., Create a todo app with React and local storage)');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { createProject, setCurrentProject } = useProjects();
@@ -93,11 +93,15 @@ const IntentionInput = () => {
     }
   };
 
+  const handleTemplatePlaceholderChange = (description: string) => {
+    setPlaceholder(description);
+  };
+
   return (
     <div className="w-full max-w-2xl mx-auto">
       <div className="relative">
         <Textarea
-          placeholder="Type your intention here... (e.g., 'Create a todo app with React and local storage')"
+          placeholder={placeholder}
           value={intention}
           onChange={(e) => setIntention(e.target.value)}
           className="min-h-[120px] pr-24 resize-none text-lg"
@@ -133,10 +137,12 @@ const IntentionInput = () => {
           </TooltipProvider>
         </div>
       </div>
-      <PromptTemplates onSelectTemplate={setIntention} />
+      <PromptTemplates 
+        onSelectTemplate={setIntention} 
+        onTemplateChange={handleTemplatePlaceholderChange}
+      />
     </div>
   );
 };
 
 export default IntentionInput;
-
