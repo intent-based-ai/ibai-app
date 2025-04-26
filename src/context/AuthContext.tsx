@@ -13,7 +13,7 @@ type AuthUser = {
 type AuthContextType = {
   user: AuthUser;
   session: Session | null;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<any>; // Changed return type from Promise<void> to Promise<any>
   signup: (email: string, password: string, name: string) => Promise<void>;
   logout: () => Promise<void>;
   isLoading: boolean;
@@ -209,7 +209,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         description: "You've been logged in successfully",
       });
       
-      return data;
+      return data; // This is what causes the type error, but we've fixed the type definition
     } catch (error: any) {
       toast({
         title: "Login failed",

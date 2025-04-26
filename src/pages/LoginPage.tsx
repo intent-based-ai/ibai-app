@@ -59,7 +59,7 @@ const LoginPage = () => {
     }
   }, [user, session, from, navigate]);
 
-  // Show form instead of loading state
+  // Show form instead of loading state for better user experience
   if (isLoading && !user && !isSubmitting) {
     return (
       <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
