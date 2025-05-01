@@ -1,18 +1,20 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import { useProjects } from '@/context/ProjectContext';
 import FileExplorer from '@/components/FileExplorer';
 import CodeEditor from '@/components/CodeEditor';
 import KnowledgeManager from '@/components/KnowledgeManager';
+import GitHubManager from '@/components/GitHubManager';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Code, BookOpen } from 'lucide-react';
+import { Code, BookOpen, Github } from 'lucide-react';
 import { Loader2 } from 'lucide-react';
 
 const ProjectDetailPage = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const { projects, currentProject, setCurrentProject, loading } = useProjects();
   const [activeFileId, setActiveFileId] = useState<string>('');
-  const [activeTab, setActiveTab] = useState<'code' | 'knowledge'>('code');
+  const [activeTab, setActiveTab] = useState<'code' | 'knowledge' | 'github'>('code');
   const [localLoading, setLocalLoading] = useState(true);
   
   useEffect(() => {
@@ -100,7 +102,7 @@ const ProjectDetailPage = () => {
           <div className="border-b p-2">
             <Tabs 
               value={activeTab} 
-              onValueChange={(v) => setActiveTab(v as 'code' | 'knowledge')}
+              onValueChange={(v) => setActiveTab(v as 'code' | 'knowledge' | 'github')}
               className="w-full"
             >
               <TabsList>
@@ -111,6 +113,10 @@ const ProjectDetailPage = () => {
                 <TabsTrigger value="knowledge" className="flex items-center gap-1">
                   <BookOpen className="h-4 w-4" />
                   Knowledge
+                </TabsTrigger>
+                <TabsTrigger value="github" className="flex items-center gap-1">
+                  <Github className="h-4 w-4" />
+                  GitHub
                 </TabsTrigger>
               </TabsList>
             </Tabs>
@@ -140,6 +146,12 @@ const ProjectDetailPage = () => {
                     initialContext={currentProject.customContext}
                     initialInstructions={currentProject.customInstructions}
                   />
+                )}
+              </TabsContent>
+              
+              <TabsContent value="github" className="mt-0 h-full">
+                {currentProject && (
+                  <GitHubManager projectId={currentProject.id} />
                 )}
               </TabsContent>
             </Tabs>
