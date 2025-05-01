@@ -13,7 +13,7 @@ interface ProjectCardProps {
 
 const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
   return (
-    <Link to={`/project/${project.id}`}>
+    <Link to={`/project/${project.id}`} className="block">
       <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer">
         <CardHeader>
           <CardTitle className="line-clamp-1">{project.title}</CardTitle>

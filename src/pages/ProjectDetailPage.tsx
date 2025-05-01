@@ -7,15 +7,17 @@ import CodeEditor from '@/components/CodeEditor';
 import KnowledgeManager from '@/components/KnowledgeManager';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Code, BookOpen } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 const ProjectDetailPage = () => {
   const { projectId } = useParams<{ projectId: string }>();
-  const { projects, currentProject, setCurrentProject } = useProjects();
+  const { projects, currentProject, setCurrentProject, loading } = useProjects();
   const [activeFileId, setActiveFileId] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'code' | 'knowledge'>('code');
   
   useEffect(() => {
     if (projectId) {
+      // Find the project in the projects array
       const project = projects.find(p => p.id === projectId);
       if (project) {
         setCurrentProject(project);
@@ -27,16 +29,25 @@ const ProjectDetailPage = () => {
       }
     }
     
+    // Cleanup when component unmounts
     return () => {
       setCurrentProject(null);
     };
   }, [projectId, projects, setCurrentProject]);
   
-  if (!projectId || !currentProject) {
+  if (loading) {
+    return (
+      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+  
+  if (!projectId || (!loading && !currentProject)) {
     return <Navigate to="/projects" />;
   }
   
-  const activeFile = currentProject.files.find(file => file.id === activeFileId);
+  const activeFile = currentProject?.files.find(file => file.id === activeFileId);
   
   const getLanguage = (file: { name: string, type: string }) => {
     if (file.type) return file.type;
@@ -58,19 +69,21 @@ const ProjectDetailPage = () => {
   return (
     <div className="h-[calc(100vh-4rem)] flex flex-col overflow-hidden">
       <div className="border-b p-4">
-        <h1 className="text-xl font-bold line-clamp-1">{currentProject.name}</h1>
+        <h1 className="text-xl font-bold line-clamp-1">{currentProject?.title || 'Project'}</h1>
         <p className="text-sm text-muted-foreground line-clamp-1">
-          {currentProject.description}
+          {currentProject?.description || 'No description'}
         </p>
       </div>
       
       <div className="flex flex-1 overflow-hidden">
         <div className="w-64 overflow-hidden">
-          <FileExplorer 
-            project={currentProject} 
-            activeFileId={activeFileId}
-            onSelectFile={setActiveFileId}
-          />
+          {currentProject && (
+            <FileExplorer 
+              project={currentProject} 
+              activeFileId={activeFileId}
+              onSelectFile={setActiveFileId}
+            />
+          )}
         </div>
         
         <div className="flex-1 overflow-hidden flex flex-col">
@@ -98,7 +111,7 @@ const ProjectDetailPage = () => {
               <TabsContent value="code" className="mt-0 h-full">
                 {activeFile ? (
                   <CodeEditor
-                    projectId={currentProject.id}
+                    projectId={currentProject!.id}
                     fileId={activeFile.id}
                     initialContent={activeFile.content}
                     language={getLanguage(activeFile)}
@@ -111,11 +124,13 @@ const ProjectDetailPage = () => {
               </TabsContent>
               
               <TabsContent value="knowledge" className="mt-0 h-full">
-                <KnowledgeManager
-                  projectId={currentProject.id}
-                  initialContext={currentProject.customContext}
-                  initialInstructions={currentProject.customInstructions}
-                />
+                {currentProject && (
+                  <KnowledgeManager
+                    projectId={currentProject.id}
+                    initialContext={currentProject.customContext}
+                    initialInstructions={currentProject.customInstructions}
+                  />
+                )}
               </TabsContent>
             </Tabs>
           </div>
