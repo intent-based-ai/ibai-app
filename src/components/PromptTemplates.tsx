@@ -1,5 +1,4 @@
-
-import React, { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { CircleChevronRight } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -41,7 +40,7 @@ interface PromptTemplatesProps {
 }
 
 const PromptTemplates: React.FC<PromptTemplatesProps> = ({ onSelectTemplate, onTemplateChange }) => {
-  const [currentIndex, setCurrentIndex] = React.useState(0);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -50,36 +49,35 @@ const PromptTemplates: React.FC<PromptTemplatesProps> = ({ onSelectTemplate, onT
         onTemplateChange(templates[nextIndex].description);
         return nextIndex;
       });
-    }, 5000); // Rotate every 5 seconds
+    }, 3000); // Rotate every 5 seconds
 
     return () => clearInterval(interval);
-  }, [onTemplateChange]);
+  }, []);
 
   return (
-    <div className="flex items-center gap-2 mt-2">
-      <span className="text-sm text-muted-foreground">Prompt templates:</span>
-      <Carousel className="max-w-xs">
-        <CarouselContent>
-          {templates.map((template, index) => (
-            <CarouselItem key={index} className={index === currentIndex ? 'block' : 'hidden'}>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="text-sm"
-                      onClick={() => onSelectTemplate(template.description)}
-                    >
-                      {template.summary}
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>{template.description}</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </CarouselItem>
-          ))}
-        </CarouselContent>
-      </Carousel>
+    <div className="flex justify-center gap-2 mt-4 flex-wrap">
+      {templates.map((template, index) => (
+        <TooltipProvider key={index}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant={index === currentIndex ? "default" : "outline"}
+                className={`text-sm transition-all ${index === currentIndex ? 'scale-105' : 'opacity-70'}`}
+                onClick={() => {
+                  onSelectTemplate(template.description);
+                  setCurrentIndex(index);
+                }}
+              >
+                {template.summary}
+                {index === currentIndex && (
+                  <CircleChevronRight className="ml-1 h-4 w-4" />
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{template.description}</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      ))}
     </div>
   );
 };

@@ -7,22 +7,43 @@ export const useMockProjects = () => {
       return [
         {
           id: crypto.randomUUID(),
-          title: 'Portfolio Website',
-          description: 'Personal portfolio showcasing my web development skills',
+          title: 'Real Estate team',
+          description: 'Create a team of agents that can help me sell my house.',
           files: [
             { 
               id: crypto.randomUUID(), 
-              name: 'index.tsx', 
-              path: 'src/index.tsx', 
-              content: '// React component for portfolio homepage', 
-              type: 'tsx' 
+              name: 'README.md', 
+              path: 'README.md', 
+              content: '# Real Estate AI Team\n\nA team of agents to assist with selling houses.', 
+              type: 'markdown' 
             },
             { 
               id: crypto.randomUUID(), 
-              name: 'styles.css', 
-              path: 'src/styles.css', 
-              content: '/* Styling for portfolio site */', 
-              type: 'css' 
+              name: 'server.yaml', 
+              path: 'server.yaml', 
+              content: '# intent-based ai agents for real estate', 
+              type: 'yaml' 
+            },
+            { 
+              id: crypto.randomUUID(), 
+              name: 'package.json', 
+              path: 'package.json', 
+              content: '{\n  "name": "real-estate-team",\n  "version": "1.0.0"\n}', 
+              type: 'json' 
+            },
+            { 
+              id: crypto.randomUUID(), 
+              name: 'index.ts', 
+              path: 'src/index.ts', 
+              content: '// Main entry point for the application', 
+              type: 'typescript' 
+            },
+            { 
+              id: crypto.randomUUID(), 
+              name: 'tsconfig.json', 
+              path: 'tsconfig.json', 
+              content: '{\n  "compilerOptions": {\n    "target": "ES2020"\n  }\n}', 
+              type: 'json' 
             }
           ],
           created_at: new Date().toISOString(),
@@ -35,10 +56,24 @@ export const useMockProjects = () => {
           files: [
             { 
               id: crypto.randomUUID(), 
-              name: 'TaskList.tsx', 
-              path: 'src/components/TaskList.tsx', 
-              content: '// Component for displaying tasks', 
-              type: 'tsx' 
+              name: 'package.json', 
+              path: 'package.json', 
+              content: '{\n  "name": "task-manager",\n  "version": "1.0.0"\n}', 
+              type: 'json' 
+            },
+            { 
+              id: crypto.randomUUID(), 
+              name: 'bunup.config.ts', 
+              path: 'bunup.config.ts', 
+              content: 'export default {\n  // bunup configuration\n};', 
+              type: 'typescript' 
+            },
+            { 
+              id: crypto.randomUUID(), 
+              name: 'index.ts', 
+              path: 'src/index.ts', 
+              content: '// Task manager entry point', 
+              type: 'typescript' 
             }
           ],
           created_at: new Date().toISOString(),

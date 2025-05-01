@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -12,6 +11,9 @@ interface ProjectCardProps {
 }
 
 const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
+  // Log the project to ensure ID is present
+  console.log('Rendering ProjectCard with project:', project);
+  
   return (
     <Link to={`/project/${project.id}`} className="block">
       <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer">

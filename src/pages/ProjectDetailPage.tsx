@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import { useProjects } from '@/context/ProjectContext';
@@ -14,19 +13,29 @@ const ProjectDetailPage = () => {
   const { projects, currentProject, setCurrentProject, loading } = useProjects();
   const [activeFileId, setActiveFileId] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'code' | 'knowledge'>('code');
+  const [localLoading, setLocalLoading] = useState(true);
   
   useEffect(() => {
+    console.log('ProjectDetailPage mounted with projectId:', projectId);
+    console.log('Current projects:', projects);
+    
     if (projectId) {
+      setLocalLoading(true);
       // Find the project in the projects array
       const project = projects.find(p => p.id === projectId);
+      
       if (project) {
+        console.log('Found project:', project);
         setCurrentProject(project);
         
         // Set the first file as active if there are files and none is selected
         if (project.files.length > 0 && !activeFileId) {
           setActiveFileId(project.files[0].id);
         }
+      } else {
+        console.log('Project not found in projects array');
       }
+      setLocalLoading(false);
     }
     
     // Cleanup when component unmounts
@@ -35,7 +44,7 @@ const ProjectDetailPage = () => {
     };
   }, [projectId, projects, setCurrentProject]);
   
-  if (loading) {
+  if (loading || localLoading) {
     return (
       <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -43,7 +52,8 @@ const ProjectDetailPage = () => {
     );
   }
   
-  if (!projectId || (!loading && !currentProject)) {
+  if (!projectId || (!loading && !localLoading && !currentProject)) {
+    console.log('Redirecting: projectId or currentProject missing', { projectId, currentProject });
     return <Navigate to="/projects" />;
   }
   

@@ -43,8 +43,8 @@ const KnowledgeManager: React.FC<KnowledgeManagerProps> = ({
       <Tabs defaultValue="context">
         <div className="bg-muted p-2">
           <TabsList>
-            <TabsTrigger value="context">Custom Context</TabsTrigger>
-            <TabsTrigger value="instructions">Custom Instructions</TabsTrigger>
+            <TabsTrigger value="context">Context</TabsTrigger>
+            <TabsTrigger value="instructions">Instructions</TabsTrigger>
           </TabsList>
         </div>
         
@@ -76,7 +76,7 @@ const KnowledgeManager: React.FC<KnowledgeManagerProps> = ({
             placeholder="Add custom instructions here..."
             className="min-h-[200px]"
           />
-          <Button onClick={handleSaveInstructions}>
+          <Button onClick={handleSaveInstructions} disabled={true}>
             <Save className="h-4 w-4 mr-2" />
             Save Instructions
           </Button>

@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import IntentionInput from '@/components/IntentionInput';
 import { useAuth } from '@/context/AuthContext';
 import { useProjects } from '@/context/ProjectContext';
@@ -13,8 +13,9 @@ const HomePage = () => {
   const subheadings = [
     "Just describe what you want to build, and our AI will generate the code for you.",
     "Deliver faster, adapt faster, and crush the gap between vision and reality.",
-    "Our engine reads your goals and builds dynamic, self-adjusting workflows that think and act in real-time.",
-    "One idea in. One intelligent agent out. We make your workflows smarter, faster, and ready to scale — it's next-level autonomy."
+    "Intent-based engine builds dynamic, self-adjusting MCP servers.",
+    "One idea in. AI agents out. Smarter, faster, and ready to scale agents.",
+    "Empower your creativity with MCP Agents generation.",
   ];
   
   const [currentSubheadingIndex, setCurrentSubheadingIndex] = useState(0);
@@ -38,7 +39,7 @@ const HomePage = () => {
         <div className="container">
           <div className="max-w-2xl mx-auto text-center text-white mb-10">
             <h1 className="text-4xl font-bold mb-4">
-              Transform your ideas into code with IB-AI
+              Transform your ideas into MCP-based AI Agents with IB-AI
             </h1>
             <p className={`text-lg transition-opacity duration-500 ${isChanging ? 'opacity-0' : 'opacity-100'}`}>
               {subheadings[currentSubheadingIndex]}
