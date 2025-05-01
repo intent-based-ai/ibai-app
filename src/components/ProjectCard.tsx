@@ -4,7 +4,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
 import { Link } from 'react-router-dom';
-import { type Project } from '@/context/ProjectContext';
+import { type Project } from '@/types/project';
 import { FileCode, Calendar } from 'lucide-react';
 
 interface ProjectCardProps {
