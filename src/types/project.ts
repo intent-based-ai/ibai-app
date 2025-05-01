@@ -3,7 +3,8 @@ export type File = {
   id: string;
   name: string;
   path: string;
-  content: string;
+  isDirectory?: boolean;
+  content?: string;
   type: string;
 };
 

@@ -59,7 +59,7 @@ const KnowledgeManager: React.FC<KnowledgeManagerProps> = ({
             placeholder="Add custom context here..."
             className="min-h-[200px]"
           />
-          <Button onClick={handleSaveContext}>
+          <Button onClick={handleSaveContext} disabled={true}>
             <Save className="h-4 w-4 mr-2" />
             Save Context
           </Button>

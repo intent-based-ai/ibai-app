@@ -18,25 +18,20 @@ const ProjectDetailPage = () => {
   const [localLoading, setLocalLoading] = useState(true);
   
   useEffect(() => {
-    console.log('ProjectDetailPage mounted with projectId:', projectId);
-    console.log('Current projects:', projects);
-    
     if (projectId) {
       setLocalLoading(true);
       // Find the project in the projects array
       const project = projects.find(p => p.id === projectId);
       
       if (project) {
-        console.log('Found project:', project);
         setCurrentProject(project);
         
         // Set the first file as active if there are files and none is selected
         if (project.files.length > 0 && !activeFileId) {
           setActiveFileId(project.files[0].id);
         }
-      } else {
-        console.log('Project not found in projects array');
       }
+      
       setLocalLoading(false);
     }
     

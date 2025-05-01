@@ -31,11 +31,9 @@ const LoginPage = () => {
     }
     
     setIsSubmitting(true);
-    console.log('Submitting login form with email:', email);
     
     try {
       await login(email, password);
-      console.log('Login completed, user object:', user);
       
       // Redirect after successful login
       navigate(from, { replace: true });

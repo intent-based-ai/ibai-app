@@ -10,10 +10,7 @@ interface ProjectCardProps {
   project: Project;
 }
 
-const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
-  // Log the project to ensure ID is present
-  console.log('Rendering ProjectCard with project:', project);
-  
+const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {  
   return (
     <Link to={`/project/${project.id}`} className="block">
       <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer">
