@@ -1,15 +1,16 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-const SUPABASE_URL = "https://izidsxjebciwbjwclkju.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml6aWRzeGplYmNpd2Jqd2Nsa2p1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE3MTIwNjcsImV4cCI6MjA1NzI4ODA2N30.u60E9QGJmIhAFFVLiAxBjN3ycXanr-8oVZyFwZSeDMY";
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 export const supabase = createClient(
   SUPABASE_URL, 
-  SUPABASE_ANON_KEY, 
+  SUPABASE_PUBLISHABLE_KEY, 
   {
     db: {
-      schema: 'api' // Use the api schema for all queries
+      schema: 'intent_based' // Use the intent_based schema for all queries
     },
     auth: {
       autoRefreshToken: true,

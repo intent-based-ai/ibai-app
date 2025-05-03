@@ -1,3 +1,8 @@
+# custom
+*.ignoreme.*
+.ignoreme.*/**
+.env
+
 # Logs
 logs
 *.log
