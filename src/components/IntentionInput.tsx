@@ -16,7 +16,7 @@ const IntentionInput = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [userHasInteracted, setUserHasInteracted] = useState(false);
   const navigate = useNavigate();
-  const { createProject, setCurrentProject } = useProjects();
+  const { createProjectFromIntention, setCurrentProject } = useProjects();
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -56,30 +56,8 @@ const IntentionInput = () => {
         }
       ];
       
-      // Create project in Supabase
-      const { data: project, error } = await supabase
-        .from('intent_based.projects')
-        .insert({
-          user_id: user.id,
-          title: 'Project in progress...',
-          description: 'Generating your project...',
-          code_files: initialFiles,
-          knowledge_context: intention.trim(),
-        })
-        .select()
-        .single();
-      
-      if (error) {
-        throw error;
-      }
-      
       // Create project locally and set as current
-      const newProject = await createProject(
-        project.title, 
-        project.description || '', 
-        project.code_files || initialFiles,
-        project.id // Use the ID from Supabase
-      );
+      const newProject = await createProjectFromIntention(intention, initialFiles);
       setCurrentProject(newProject);
       
       toast({
@@ -87,7 +65,7 @@ const IntentionInput = () => {
         description: "Your project is being generated",
       });
       
-      navigate(`/project/${project.id}`);
+      navigate(`/project/${newProject.id}`);
     } catch (error) {
       console.error('Failed to create project:', error);
       toast({

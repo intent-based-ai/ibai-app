@@ -5,9 +5,10 @@ import { Project, File } from '@/types/project';
 export const projectService = {
   async fetchProjects() {
     const { data, error } = await supabase
-      .from('projects')
+      .from('ib_projects')
       .select('*')
       .order('updated_at', { ascending: false });
+    console.log(data, error);
 
     if (error) throw error;
 
@@ -28,7 +29,7 @@ export const projectService = {
 
   async saveProject(project: Project) {
     const { error } = await supabase
-      .from('projects')
+      .from('ib_projects')
       .update({
         title: project.title,
         description: project.description,
@@ -42,16 +43,25 @@ export const projectService = {
     if (error) throw error;
   },
 
-  async createProject(title: string, description: string, files: File[], userId: string) {
+  async createProject(
+        userId: string, 
+        title: string, 
+        description: string, 
+        files?: File[], 
+        context?: string, 
+        instructions?: string
+      ) {
     const newProject = {
       title,
       description,
-      code_files: files,
+      code_files: files || [],
       user_id: userId,
+      knowledge_context: context || '',
+      knowledge_instructions: instructions || '',
     };
 
     const { data, error } = await supabase
-      .from('projects')
+      .from('ib_projects')
       .insert(newProject)
       .select()
       .single();
@@ -75,7 +85,7 @@ export const projectService = {
 
   async updateFile(projectId: string, updatedFiles: File[]) {
     const { error } = await supabase
-      .from('projects')
+      .from('ib_projects')
       .update({
         code_files: updatedFiles,
         updated_at: new Date().toISOString()
@@ -92,7 +102,7 @@ export const projectService = {
     updateData[field] = value;
 
     const { error } = await supabase
-      .from('projects')
+      .from('ib_projects')
       .update(updateData)
       .eq('id', projectId);
 

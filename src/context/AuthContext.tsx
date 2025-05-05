@@ -41,7 +41,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setTimeout(async () => {
           try {
             const { data: profile } = await supabase
-              .from('public.profiles')
+              .from('profiles')
               .select('full_name')
               .eq('id', id)
               .single();
@@ -82,7 +82,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           // Get user profile and set the session
           try {
             const { data: profile } = await supabase
-              .from('public.profiles')
+              .from('profiles')
               .select('full_name')
               .eq('id', id)
               .single();
@@ -191,7 +191,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         
         // Get user profile in a separate call
         const { data: profile } = await supabase
-          .from('public.profiles')
+          .from('profiles')
           .select('full_name')
           .eq('id', id)
           .single();

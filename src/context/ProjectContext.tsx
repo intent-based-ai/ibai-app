@@ -69,12 +69,24 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
     }
   };
 
-  const createProject = async (title: string, description: string, files: File[]) => {
+  const createProjectFromIntention = async (intention: string, files?: File[]) => {
+    const title = "Project from Intention";
+    const description = "Your project is being generated";
+    return createProject(title, description, files, intention);
+  };
+
+  const createProject = async (title: string, description: string, files?: File[], context?: string) => {
     if (!user) throw new Error('User not authenticated');
 
     try {
       setLoading(true);
-      const createdProject = await projectService.createProject(title, description, files, user.id);
+      const createdProject = await projectService.createProject(
+        user.id, 
+        title, 
+        description, 
+        files, 
+        context,
+      );
       
       setProjects(prev => [createdProject, ...prev]);
       
@@ -301,6 +313,7 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
         setCurrentProject,
         saveProject,
         createProject,
+        createProjectFromIntention,
         addFile,
         updateFile,
         deleteFile,
