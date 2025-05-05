@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
@@ -35,12 +35,13 @@ const Navbar = () => {
   };
 
   return (
-    <header className="border-b">
+    <header className="border-b border-border/40 bg-background/80 backdrop-blur-sm sticky top-0 z-50">
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-6">
-          <Link to="/" className="flex items-center gap-2 font-semibold">
-            <img src="/intent-based-ai-logo-transp.svg" alt="Logo" className="h-8 w-8" />
-            <span className="bg-gradient-to-r from-brand-purple via-brand-blue to-brand-teal bg-clip-text text-xl font-bold">
+          <Link to="/" className="flex items-center gap-2 font-semibold relative">
+            <div className="absolute -inset-2 rounded-full bg-gradient-blend opacity-75 blur-sm"></div>
+            <img src="/intent-based-ai-logo-transp.svg" alt="Logo" className="h-8 w-8 relative animate-float" />
+            <span className="bg-gradient-blend gradient-text text-xl font-bold relative">
               IB-AI
             </span>
           </Link>
@@ -52,28 +53,31 @@ const Navbar = () => {
             {user && projects.length > 0 ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="p-0 h-auto flex items-center gap-1">
-                    <span className="text-sm font-medium transition-colors hover:text-primary">Projects</span>
-                    <ChevronRight className="h-4 w-4" />
+                  <Button variant="ghost" className="p-0 h-auto flex items-center gap-1 hover:text-primary">
+                    <span className="text-sm font-medium">Projects</span>
+                    <ChevronRight className="h-4 w-4 text-brand-orange transition-transform group-data-[state=open]:rotate-90" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-[240px]">
                   <div className="p-2">
-                    <Input
-                      placeholder="Search projects..."
-                      value={searchQuery}
-                      onChange={handleSearchChange}
-                      onFocus={() => setIsSearchFocused(true)}
-                      onBlur={() => setIsSearchFocused(false)}
-                      className="mb-2"
-                    />
+                    <div className="relative">
+                      <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        placeholder="Search projects..."
+                        value={searchQuery}
+                        onChange={handleSearchChange}
+                        onFocus={() => setIsSearchFocused(true)}
+                        onBlur={() => setIsSearchFocused(false)}
+                        className="mb-2 pl-8"
+                      />
+                    </div>
                   </div>
                   
                   <DropdownMenuGroup>
                     {recentProjects.length > 0 ? (
                       recentProjects.map(project => (
                         <DropdownMenuItem key={project.id} asChild>
-                          <Link to={`/project/${project.id}`} className="cursor-pointer">
+                          <Link to={`/project/${project.id}`} className="cursor-pointer hover:bg-gradient-primary/10">
                             {project.title}
                           </Link>
                         </DropdownMenuItem>
@@ -88,7 +92,7 @@ const Navbar = () => {
                   <DropdownMenuSeparator />
                   
                   <DropdownMenuItem asChild>
-                    <Link to="/projects" className="cursor-pointer font-medium">
+                    <Link to="/projects" className="cursor-pointer font-medium bg-gradient-primary gradient-text w-fit mx-auto">
                       Go to projects
                     </Link>
                   </DropdownMenuItem>
@@ -105,22 +109,22 @@ const Navbar = () => {
         <div className="flex items-center gap-4">
           {user ? (
             <div className="flex items-center gap-4">
-              <span className="text-sm text-muted-foreground">
+              <span className="text-sm text-muted-foreground rounded-full px-3 py-1 bg-muted/50">
                 {user.email}
               </span>
-              <Button variant="ghost" size="icon" onClick={logout}>
+              <Button variant="ghost" size="icon" onClick={logout} className="hover:bg-brand-orange/10 hover:text-brand-orange">
                 <LogOut className="h-5 w-5" />
               </Button>
             </div>
           ) : (
             <div className="flex items-center gap-2">
               <Link to="/login">
-                <Button variant="ghost">
+                <Button variant="ghost" className="hover:bg-brand-blue/10 hover:text-brand-blue">
                   Log in
                 </Button>
               </Link>
               <Link to="/signup">
-                <Button>
+                <Button className="bg-gradient-primary hover:opacity-90 transition-opacity">
                   Sign up
                 </Button>
               </Link>
@@ -133,7 +137,7 @@ const Navbar = () => {
             rel="noreferrer"
             className="hidden md:flex"
           >
-            <Button variant="outline" size="icon">
+            <Button variant="outline" size="icon" className="border-brand-blue/20 hover:border-brand-blue/50 hover:bg-brand-blue/5">
               <Github className="h-5 w-5" />
             </Button>
           </a>

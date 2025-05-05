@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -65,6 +66,8 @@ export default {
 				brand: {
 					blue: '#1193b0',
 					teal: '#2CC8AE',
+					orange: '#da7756',
+					peach: '#ffb396',
 					dark: '#1C1C28'
 				}
 			},
@@ -105,16 +108,31 @@ export default {
 					to: {
 						opacity: '0'
 					}
+				},
+				'float': {
+					'0%, 100%': {
+						transform: 'translateY(0)'
+					},
+					'50%': {
+						transform: 'translateY(-5px)'
+					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'fade-in': 'fade-in 0.3s ease-out',
-				'fade-out': 'fade-out 0.3s ease-out'
+				'fade-out': 'fade-out 0.3s ease-out',
+				'float': 'float 3s ease-in-out infinite'
 			},
 			fontFamily: {
 				code: ['Fira Code', 'monospace']
+			},
+			backgroundImage: {
+				'gradient-primary': 'linear-gradient(135deg, #1193b0 0%, #2CC8AE 100%)',
+				'gradient-secondary': 'linear-gradient(135deg, #da7756 0%, #ffb396 100%)',
+				'gradient-blend': 'linear-gradient(135deg, #1193b0 0%, #da7756 50%, #2CC8AE 100%)',
+				'gradient-radial': 'radial-gradient(circle, #1193b0 0%, #da7756 100%)'
 			}
 		}
 	},
