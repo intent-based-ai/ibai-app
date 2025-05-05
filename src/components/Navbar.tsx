@@ -76,8 +76,8 @@ const Navbar = () => {
                   <DropdownMenuGroup>
                     {recentProjects.length > 0 ? (
                       recentProjects.map(project => (
-                        <DropdownMenuItem key={project.id} asChild>
-                          <Link to={`/project/${project.id}`} className="cursor-pointer hover:bg-gradient-primary/10">
+                        <DropdownMenuItem key={project.id}>
+                          <Link to={`/project/${project.id}`} className="w-full cursor-pointer hover:bg-gradient-primary/10">
                             {project.title}
                           </Link>
                         </DropdownMenuItem>
@@ -91,8 +91,8 @@ const Navbar = () => {
                   
                   <DropdownMenuSeparator />
                   
-                  <DropdownMenuItem asChild>
-                    <Link to="/projects" className="cursor-pointer font-medium bg-gradient-primary gradient-text w-fit mx-auto">
+                  <DropdownMenuItem>
+                    <Link to="/projects" className="w-full cursor-pointer font-medium bg-gradient-primary gradient-text text-center">
                       Go to projects
                     </Link>
                   </DropdownMenuItem>
