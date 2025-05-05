@@ -39,6 +39,7 @@ const Navbar = () => {
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-6">
           <Link to="/" className="flex items-center gap-2 font-semibold">
+            <img src="/intent-based-ai-logo-transp.svg" alt="Logo" className="h-8 w-8" />
             <span className="bg-gradient-to-r from-brand-purple via-brand-blue to-brand-teal bg-clip-text text-xl font-bold">
               IB-AI
             </span>
