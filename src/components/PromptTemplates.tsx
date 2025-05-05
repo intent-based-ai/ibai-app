@@ -37,22 +37,37 @@ const templates: PromptTemplate[] = [
 interface PromptTemplatesProps {
   onSelectTemplate: (description: string) => void;
   onTemplateChange: (description: string) => void;
+  userHasInteracted?: boolean;
 }
 
-const PromptTemplates: React.FC<PromptTemplatesProps> = ({ onSelectTemplate, onTemplateChange }) => {
+const PromptTemplates: React.FC<PromptTemplatesProps> = ({ 
+  onSelectTemplate, 
+  onTemplateChange,
+  userHasInteracted = false 
+}) => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [shouldRotate, setShouldRotate] = useState(true);
+
+  // Stop rotation if user has interacted
+  useEffect(() => {
+    if (userHasInteracted) {
+      setShouldRotate(false);
+    }
+  }, [userHasInteracted]);
 
   useEffect(() => {
+    if (!shouldRotate) return;
+
     const interval = setInterval(() => {
       setCurrentIndex((prev) => {
         const nextIndex = (prev + 1) % templates.length;
         onTemplateChange(templates[nextIndex].description);
         return nextIndex;
       });
-    }, 3000); // Rotate every 5 seconds
+    }, 3000); // Rotate every 3 seconds
 
     return () => clearInterval(interval);
-  }, []);
+  }, [shouldRotate, onTemplateChange]);
 
   return (
     <div className="flex justify-center gap-2 mt-4 flex-wrap">
@@ -66,6 +81,7 @@ const PromptTemplates: React.FC<PromptTemplatesProps> = ({ onSelectTemplate, onT
                 onClick={() => {
                   onSelectTemplate(template.description);
                   setCurrentIndex(index);
+                  setShouldRotate(false); // Stop rotation when user selects a template
                 }}
               >
                 {template.summary}

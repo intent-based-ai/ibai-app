@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,11 +8,13 @@ import { useAuth } from '@/context/AuthContext';
 import { Plus } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import PromptTemplates from './PromptTemplates';
+import { supabase } from '@/integrations/supabase/client';
 
 const IntentionInput = () => {
   const [intention, setIntention] = useState('');
   const [placeholder, setPlaceholder] = useState('Type your intention here... (e.g., Create a todo app with React and local storage)');
   const [isLoading, setIsLoading] = useState(false);
+  const [userHasInteracted, setUserHasInteracted] = useState(false);
   const navigate = useNavigate();
   const { createProject, setCurrentProject } = useProjects();
   const { toast } = useToast();
@@ -44,49 +45,54 @@ const IntentionInput = () => {
     setIsLoading(true);
     
     try {
-      // In a real app, this would be an API call to generate code
-      // For now, let's create a mock project with some sample files
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API call
-      
-      const mockFiles = [
+      // Initial empty project files structure
+      const initialFiles = [
         {
           id: crypto.randomUUID(),
-          name: 'index.html',
+          name: 'README.md',
           path: '/',
-          content: '<!DOCTYPE html>\n<html>\n<head>\n  <title>My App</title>\n</head>\n<body>\n  <div id="root"></div>\n  <script src="index.js"></script>\n</body>\n</html>',
-          type: 'html'
-        },
-        {
-          id: crypto.randomUUID(),
-          name: 'index.js',
-          path: '/',
-          content: 'import React from "react";\nimport ReactDOM from "react-dom";\nimport App from "./App";\n\nReactDOM.render(<App />, document.getElementById("root"));',
-          type: 'javascript'
-        },
-        {
-          id: crypto.randomUUID(),
-          name: 'App.js',
-          path: '/',
-          content: 'import React from "react";\n\nfunction App() {\n  return (\n    <div className="App">\n      <h1>Hello World</h1>\n    </div>\n  );\n}\n\nexport default App;',
-          type: 'javascript'
+          content: '# Project in progress\nYour project is being generated...',
+          type: 'markdown'
         }
       ];
       
-      const projectTitle = intention.slice(0, 30) + (intention.length > 30 ? '...' : '');
-      const newProject = await createProject(projectTitle, intention, mockFiles);
+      // Create project in Supabase
+      const { data: project, error } = await supabase
+        .from('intent_based.projects')
+        .insert({
+          user_id: user.id,
+          title: 'Project in progress...',
+          description: 'Generating your project...',
+          code_files: initialFiles,
+          knowledge_context: intention.trim(),
+        })
+        .select()
+        .single();
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Create project locally and set as current
+      const newProject = await createProject(
+        project.title, 
+        project.description || '', 
+        project.code_files || initialFiles,
+        project.id // Use the ID from Supabase
+      );
       setCurrentProject(newProject);
       
       toast({
-        title: "Success!",
-        description: "Your project has been created",
+        title: "Project Created",
+        description: "Your project is being generated",
       });
       
-      navigate(`/project/${newProject.id}`);
+      navigate(`/project/${project.id}`);
     } catch (error) {
-      console.error('Failed to process intention:', error);
+      console.error('Failed to create project:', error);
       toast({
         title: "Error",
-        description: "Failed to process your intention. Please try again.",
+        description: "Failed to create your project. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -96,7 +102,16 @@ const IntentionInput = () => {
 
   // This function will update the placeholder text as templates rotate
   const handleTemplatePlaceholderChange = (description: string) => {
+    // if user already has text in the intention field, don't change the placeholder
+    if (intention.trim()) return;
     setPlaceholder(description);
+  };
+
+  const handleIntentionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setIntention(e.target.value);
+    if (e.target.value.trim()) {
+      setUserHasInteracted(true);
+    }
   };
 
   return (
@@ -105,7 +120,7 @@ const IntentionInput = () => {
         <Textarea
           placeholder={placeholder}
           value={intention}
-          onChange={(e) => setIntention(e.target.value)}
+          onChange={handleIntentionChange}
           className="min-h-[120px] pr-24 resize-none text-lg"
         />
         <div className="absolute bottom-3 right-3 flex items-center gap-2">
@@ -140,8 +155,12 @@ const IntentionInput = () => {
         </div>
       </div>
       <PromptTemplates 
-        onSelectTemplate={setIntention} 
+        onSelectTemplate={(desc) => {
+          setIntention(desc);
+          setUserHasInteracted(true);
+        }} 
         onTemplateChange={handleTemplatePlaceholderChange}
+        userHasInteracted={userHasInteracted}
       />
     </div>
   );

@@ -41,15 +41,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setTimeout(async () => {
           try {
             const { data: profile } = await supabase
-              .from('profiles')
-              .select('name')
+              .from('public.profiles')
+              .select('full_name')
               .eq('id', id)
               .single();
               
             setUser({
               id,
               email: email || '',
-              name: profile?.name
+              name: profile?.full_name
             });
           } catch (error) {
             console.error('Error fetching user profile:', error);
@@ -82,15 +82,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           // Get user profile and set the session
           try {
             const { data: profile } = await supabase
-              .from('profiles')
-              .select('name')
+              .from('public.profiles')
+              .select('full_name')
               .eq('id', id)
               .single();
               
             setUser({
               id,
               email: email || '',
-              name: profile?.name
+              name: profile?.full_name
             });
           } catch (profileError) {
             console.error('Error fetching initial profile:', profileError);
@@ -191,8 +191,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         
         // Get user profile in a separate call
         const { data: profile } = await supabase
-          .from('profiles')
-          .select('name')
+          .from('public.profiles')
+          .select('full_name')
           .eq('id', id)
           .single();
           
@@ -200,7 +200,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser({
           id,
           email: email || '',
-          name: profile?.name
+          name: profile?.full_name
         });
       }
       
