@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { useProjects } from '@/context/ProjectContext';
+import { useProjects } from '@/context/project';
 import ProjectCard from '@/components/ProjectCard';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';

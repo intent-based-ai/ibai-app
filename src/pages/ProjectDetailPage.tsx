@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
-import { useProjects } from '@/context/ProjectContext';
+import { useProjects } from '@/context/project';
 import FileExplorer from '@/components/FileExplorer';
 import CodeEditor from '@/components/CodeEditor';
 import KnowledgeManager from '@/components/KnowledgeManager';
