@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import IntentionInput from '@/components/IntentionInput';
 import { useAuth } from '@/context/AuthContext';
-import { useProjects } from '@/context/ProjectContext';
+import { useProjects } from '@/context/project';
 import ProjectCard from '@/components/ProjectCard';
 
 const HomePage = () => {
