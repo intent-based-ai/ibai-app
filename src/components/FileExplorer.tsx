@@ -20,7 +20,7 @@ import {
   Worm
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useProjects } from '@/context/ProjectContext';
+import { useProjects } from '@/context/project';
 import { type Project, File } from '@/types/project';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';

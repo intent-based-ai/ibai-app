@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { useProjects } from '@/context/ProjectContext';
+import { useProjects } from '@/context/project';
 import { toast } from '@/hooks/use-toast';
 import { Save } from 'lucide-react';
 
