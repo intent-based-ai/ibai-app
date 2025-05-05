@@ -66,7 +66,6 @@ const Navbar = () => {
                       onFocus={() => setIsSearchFocused(true)}
                       onBlur={() => setIsSearchFocused(false)}
                       className="mb-2"
-                      prefix={<Search className="h-4 w-4 mr-2 text-muted-foreground" />}
                     />
                   </div>
                   
