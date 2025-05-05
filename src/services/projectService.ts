@@ -8,9 +8,12 @@ export const projectService = {
       .from('ib_projects')
       .select('*')
       .order('updated_at', { ascending: false });
-    console.log(data, error);
+    console.log('Fetched projects from Supabase:', data, error);
 
-    if (error) throw error;
+    if (error) {
+      console.error('Supabase error fetching projects:', error);
+      throw error;
+    }
 
     return (data || []).map((project: any) => ({
       id: project.id,
@@ -28,19 +31,23 @@ export const projectService = {
   },
 
   async saveProject(project: Project) {
+    console.log('Saving project to Supabase:', project.id);
     const { error } = await supabase
       .from('ib_projects')
       .update({
         title: project.title,
         description: project.description,
         code_files: project.files,
-        knowledge_context: project.knowledge_context,
-        knowledge_instructions: project.knowledge_instructions,
+        knowledge_context: project.knowledge_context || project.customContext,
+        knowledge_instructions: project.knowledge_instructions || project.customInstructions,
         updated_at: new Date().toISOString()
       })
       .eq('id', project.id);
 
-    if (error) throw error;
+    if (error) {
+      console.error('Supabase error saving project:', error);
+      throw error;
+    }
   },
 
   async createProject(
@@ -51,6 +58,7 @@ export const projectService = {
         context?: string, 
         instructions?: string
       ) {
+    console.log('Creating new project in Supabase for user:', userId);
     const newProject = {
       title,
       description,
@@ -66,7 +74,10 @@ export const projectService = {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Supabase error creating project:', error);
+      throw error;
+    }
 
     return {
       id: data.id,
@@ -84,6 +95,7 @@ export const projectService = {
   },
 
   async updateFile(projectId: string, updatedFiles: File[]) {
+    console.log('Updating files for project:', projectId);
     const { error } = await supabase
       .from('ib_projects')
       .update({
@@ -92,10 +104,14 @@ export const projectService = {
       })
       .eq('id', projectId);
 
-    if (error) throw error;
+    if (error) {
+      console.error('Supabase error updating files:', error);
+      throw error;
+    }
   },
 
   async updateProjectField(projectId: string, field: string, value: string) {
+    console.log(`Updating ${field} for project:`, projectId);
     const updateData: any = {
       updated_at: new Date().toISOString()
     };
@@ -106,6 +122,9 @@ export const projectService = {
       .update(updateData)
       .eq('id', projectId);
 
-    if (error) throw error;
+    if (error) {
+      console.error(`Supabase error updating ${field}:`, error);
+      throw error;
+    }
   }
 };

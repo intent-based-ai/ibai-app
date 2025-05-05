@@ -26,19 +26,30 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
       try {
         setLoading(true);
         
-        // Check for mock projects first
+        // Get mock projects for specific users
         const mockProjects = generateMockProjects(user.email || '');
-        if (mockProjects) {
-          setProjects(mockProjects);
-          setLoading(false);
-          return;
-        }
-
+        
         // Fetch real projects from Supabase
-        const transformedProjects = await projectService.fetchProjects();
-        setProjects(transformedProjects);
+        let realProjects: Project[] = [];
+        try {
+          realProjects = await projectService.fetchProjects();
+        } catch (error) {
+          console.error('Error fetching real projects:', error);
+          // Continue with mock projects even if real projects fetch fails
+        }
+        
+        // Combine mock and real projects
+        // If we have mock projects for this user, add them to the beginning of the list
+        const combinedProjects = mockProjects ? [...mockProjects, ...realProjects] : realProjects;
+        
+        setProjects(combinedProjects);
       } catch (error: any) {
-        console.error('Error fetching projects:', error.message);
+        console.error('Error in project fetching flow:', error.message);
+        toast({
+          title: 'Error',
+          description: 'Failed to load projects',
+          variant: 'destructive',
+        });
       } finally {
         setLoading(false);
       }
@@ -52,11 +63,25 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
 
     try {
       setLoading(true);
-      await projectService.saveProject(project);
       
+      // Check if it's a mock project (for demo users)
+      const isMockProject = project.id.includes('mock') || 
+                           (generateMockProjects(user.email || '')?.some(p => p.id === project.id));
+      
+      if (!isMockProject) {
+        // Only save real projects to the database
+        await projectService.saveProject(project);
+      }
+      
+      // Update local state regardless of project type
       setProjects(prev => 
         prev.map(p => p.id === project.id ? project : p)
       );
+      
+      toast({
+        title: 'Success',
+        description: 'Project saved successfully',
+      });
     } catch (error: any) {
       console.error('Error saving project:', error.message);
       toast({
@@ -80,6 +105,8 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
 
     try {
       setLoading(true);
+      
+      // Demo users with mock projects can still create new projects in the database
       const createdProject = await projectService.createProject(
         user.id, 
         title, 
@@ -89,6 +116,11 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
       );
       
       setProjects(prev => [createdProject, ...prev]);
+      
+      toast({
+        title: 'Success',
+        description: 'Project created successfully',
+      });
       
       return createdProject;
     } catch (error: any) {
@@ -116,7 +148,14 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
       const newFile = { ...file, id: crypto.randomUUID() };
       const updatedFiles = [...project.files, newFile];
       
-      await projectService.updateFile(projectId, updatedFiles);
+      // Check if it's a mock project
+      const isMockProject = projectId.includes('mock') || 
+                           (generateMockProjects(user.email || '')?.some(p => p.id === projectId));
+      
+      if (!isMockProject) {
+        // Only update real projects in the database
+        await projectService.updateFile(projectId, updatedFiles);
+      }
       
       const updatedProject = {
         ...project,
@@ -156,7 +195,14 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
         file.id === fileId ? { ...file, content } : file
       );
       
-      await projectService.updateFile(projectId, updatedFiles);
+      // Check if it's a mock project
+      const isMockProject = projectId.includes('mock') || 
+                           (generateMockProjects(user.email || '')?.some(p => p.id === projectId));
+      
+      if (!isMockProject) {
+        // Only update real projects in the database
+        await projectService.updateFile(projectId, updatedFiles);
+      }
       
       const updatedProject = {
         ...project,
@@ -194,7 +240,14 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
       
       const updatedFiles = project.files.filter(file => file.id !== fileId);
       
-      await projectService.updateFile(projectId, updatedFiles);
+      // Check if it's a mock project
+      const isMockProject = projectId.includes('mock') || 
+                           (generateMockProjects(user.email || '')?.some(p => p.id === projectId));
+      
+      if (!isMockProject) {
+        // Only update real projects in the database
+        await projectService.updateFile(projectId, updatedFiles);
+      }
       
       const updatedProject = {
         ...project,
@@ -227,7 +280,14 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
     try {
       setLoading(true);
       
-      await projectService.updateProjectField(projectId, 'knowledge_context', context);
+      // Check if it's a mock project
+      const isMockProject = projectId.includes('mock') || 
+                           (generateMockProjects(user.email || '')?.some(p => p.id === projectId));
+      
+      if (!isMockProject) {
+        // Only update real projects in the database
+        await projectService.updateProjectField(projectId, 'knowledge_context', context);
+      }
       
       setProjects(prev => 
         prev.map(project => {
@@ -269,7 +329,14 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
     try {
       setLoading(true);
       
-      await projectService.updateProjectField(projectId, 'knowledge_instructions', instructions);
+      // Check if it's a mock project
+      const isMockProject = projectId.includes('mock') || 
+                           (generateMockProjects(user.email || '')?.some(p => p.id === projectId));
+      
+      if (!isMockProject) {
+        // Only update real projects in the database
+        await projectService.updateProjectField(projectId, 'knowledge_instructions', instructions);
+      }
       
       setProjects(prev => 
         prev.map(project => {

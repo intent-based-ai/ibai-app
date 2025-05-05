@@ -1,15 +1,22 @@
+
 import { Project } from "@/types/project";
 
 export const useMockProjects = () => {
   const generateMockProjects = (email: string): Project[] | null => {
-    if (email === 'adrian@rebelion.la') {
+    // Add more demo emails here if needed
+    if (email === 'adrian@rebelion.la' || email === 'demo@lovable.dev') {
+      // Generate a consistent ID for mock projects
+      const getMockId = (seed: string) => `mock-${seed}-${btoa(email).slice(0, 8)}`;
+      
       return [
         {
-          id: crypto.randomUUID(),
-          title: 'Real Estate team',
+          id: getMockId('real-estate'),
+          title: 'Real Estate Team',
           description: 'Create a team of agents that can help me sell my house.',
           customContext: 'My house is in a suburban area with good schools and parks nearby, ZIP 75115.',
           customInstructions: 'Create a team of agents that can help me sell my house.',
+          knowledge_context: 'My house is in a suburban area with good schools and parks nearby, ZIP 75115.',
+          knowledge_instructions: 'Create a team of agents that can help me sell my house.',
           files: [
             {
               id: crypto.randomUUID(),
@@ -104,38 +111,49 @@ export const useMockProjects = () => {
               type: 'json'
             }
           ],
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days ago
+          updated_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()  // 2 days ago
         },
         {
-          id: crypto.randomUUID(),
+          id: getMockId('task-manager'),
           title: 'Task Management App',
           description: 'Simple task tracking and productivity application',
+          customContext: '',
+          customInstructions: '',
+          knowledge_context: '',
+          knowledge_instructions: '',
           files: [
             {
               id: crypto.randomUUID(),
               name: 'package.json',
-              path: '/typescript/package.json',  // Fixed path with leading slash
+              path: '/package.json',
               content: '{\n  "name": "task-manager",\n  "version": "1.0.0"\n}',
               type: 'json'
             },
             {
               id: crypto.randomUUID(),
               name: 'bunup.config.ts',
-              path: '/typescript/bunup.config.ts',  // Fixed path with leading slash
+              path: '/bunup.config.ts',
               content: 'export default {\n  // bunup configuration\n};',
               type: 'typescript'
             },
             {
               id: crypto.randomUUID(),
+              name: 'src',
+              path: '/src',
+              isDirectory: true,
+              type: 'directory'
+            },
+            {
+              id: crypto.randomUUID(),
               name: 'index.ts',
-              path: '/typescript/src/index.ts',  // Fixed path with leading slash
+              path: '/src/index.ts',
               content: '// Task manager entry point',
               type: 'typescript'
             }
           ],
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          created_at: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(), // 14 days ago
+          updated_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()   // 5 days ago
         }
       ];
     }
