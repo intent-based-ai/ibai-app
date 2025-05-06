@@ -40,7 +40,7 @@ const Navbar = () => {
         <div className="flex items-center gap-6">
           <Link to="/" className="flex items-center gap-2 font-semibold relative">
             <div className="absolute -inset-2 rounded-full opacity-75 blur-sm"></div>
-            <img src="/intent-based-ai-logo-transp.svg" alt="Logo" className="h-16 w-16 relative animate-float" />
+            <img src="/intent-based-ai-logo-transp.svg" alt="Logo" className="h-16 w-16 relative animate-float" /> <small style={{ fontSize: '7px' }}>{import.meta.env.VITE_REACT_APP_VERSION}</small>
           </Link>
           
           <nav className="hidden md:flex gap-6">
