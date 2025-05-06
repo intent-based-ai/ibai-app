@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import { Github, LogOut, ChevronRight, Search } from 'lucide-react';
@@ -39,22 +39,19 @@ const Navbar = () => {
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-6">
           <Link to="/" className="flex items-center gap-2 font-semibold relative">
-            <div className="absolute -inset-2 rounded-full bg-gradient-blend opacity-75 blur-sm"></div>
-            <img src="/intent-based-ai-logo-transp.svg" alt="Logo" className="h-8 w-8 relative animate-float" />
-            <span className="bg-gradient-blend gradient-text text-xl font-bold relative">
-              IB-AI
-            </span>
+            <div className="absolute -inset-2 rounded-full opacity-75 blur-sm"></div>
+            <img src="/intent-based-ai-logo-transp.svg" alt="Logo" className="h-16 w-16 relative animate-float" />
           </Link>
           
           <nav className="hidden md:flex gap-6">
-            <Link to="/" className="text-sm font-medium transition-colors hover:text-primary">
+            <Link to="/" className="text-sm font-medium transition-colors hover:text-primary py-1">
               Home
             </Link>
             {user && projects.length > 0 ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="p-0 h-auto flex items-center gap-1 hover:text-primary">
-                    <span className="text-sm font-medium">Projects</span>
+                  <Button variant="ghost" className="p-0 h-auto flex items-center gap-1 hover:text-white px-2">
+                    <span className="text-sm font-medium py-1">Projects</span>
                     <ChevronRight className="h-4 w-4 text-brand-orange transition-transform group-data-[state=open]:rotate-90" />
                   </Button>
                 </DropdownMenuTrigger>

@@ -65,7 +65,7 @@ export default {
 				},
 				brand: {
 					blue: '#1193b0',
-					teal: '#2CC8AE',
+					teal: '#1Ca8AE',
 					orange: '#da7756',
 					peach: '#ffb396',
 					dark: '#1C1C28'
@@ -129,9 +129,9 @@ export default {
 				code: ['Fira Code', 'monospace']
 			},
 			backgroundImage: {
-				'gradient-primary': 'linear-gradient(135deg, #1193b0 0%, #2CC8AE 100%)',
+				'gradient-primary': 'linear-gradient(135deg, #1193b0 0%, #1Ca8AE 100%)',
 				'gradient-secondary': 'linear-gradient(135deg, #da7756 0%, #ffb396 100%)',
-				'gradient-blend': 'linear-gradient(135deg, #1193b0 0%, #da7756 50%, #2CC8AE 100%)',
+				'gradient-blend': 'linear-gradient(135deg, #1193b0 0%, #da7756 50%, #1Ca8AE 100%)',
 				'gradient-radial': 'radial-gradient(circle, #1193b0 0%, #da7756 100%)'
 			}
 		}
