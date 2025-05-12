@@ -1,12 +1,12 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useAuth } from '@/context/AuthContext';
+import React, { useState, useEffect } from 'react';
 import { toast } from '@/hooks/use-toast';
-import { Project, ProjectContextType, File } from '@/types/project';
+import { Project, File } from '@/types/project';
 import { projectService } from '@/services/projectService';
 import { useMockProjects } from '@/hooks/useMockProjects';
-
-const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
+import { useAuth } from '@/context/AuthContext';
+import ProjectContext from './ProjectContext';
+import { isProjectMock, createUpdatedProject, updateProjectFiles } from './projectUtils';
 
 export const ProjectProvider = ({ children }: { children: React.ReactNode }) => {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -65,8 +65,7 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
       setLoading(true);
       
       // Check if it's a mock project (for demo users)
-      const isMockProject = project.id.includes('mock') || 
-                           (generateMockProjects(user.email || '')?.some(p => p.id === project.id));
+      const isMockProject = isProjectMock(project, user.email);
       
       if (!isMockProject) {
         // Only save real projects to the database
@@ -100,7 +99,7 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
     return createProject(title, description, files, intention);
   };
 
-  const createProject = async (title: string, description: string, files?: File[], context?: string) => {
+  const createProject = async (title: string, description: string, files?: File[], context?: string, instructions?: string) => {
     if (!user) throw new Error('User not authenticated');
 
     try {
@@ -112,7 +111,8 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
         title, 
         description, 
         files, 
-        context,
+        context, 
+        instructions
       );
       
       setProjects(prev => [createdProject, ...prev]);
@@ -149,19 +149,11 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
       const updatedFiles = [...project.files, newFile];
       
       // Check if it's a mock project
-      const isMockProject = projectId.includes('mock') || 
-                           (generateMockProjects(user.email || '')?.some(p => p.id === projectId));
+      const isMockProject = isProjectMock(project, user.email);
       
-      if (!isMockProject) {
-        // Only update real projects in the database
-        await projectService.updateFile(projectId, updatedFiles);
-      }
+      await updateProjectFiles(projectId, updatedFiles, isMockProject);
       
-      const updatedProject = {
-        ...project,
-        files: updatedFiles,
-        updated_at: new Date().toISOString()
-      };
+      const updatedProject = createUpdatedProject(project, { files: updatedFiles });
       
       setProjects(prev => 
         prev.map(p => p.id === projectId ? updatedProject : p)
@@ -196,19 +188,11 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
       );
       
       // Check if it's a mock project
-      const isMockProject = projectId.includes('mock') || 
-                           (generateMockProjects(user.email || '')?.some(p => p.id === projectId));
+      const isMockProject = isProjectMock(project, user.email);
       
-      if (!isMockProject) {
-        // Only update real projects in the database
-        await projectService.updateFile(projectId, updatedFiles);
-      }
+      await updateProjectFiles(projectId, updatedFiles, isMockProject);
       
-      const updatedProject = {
-        ...project,
-        files: updatedFiles,
-        updated_at: new Date().toISOString()
-      };
+      const updatedProject = createUpdatedProject(project, { files: updatedFiles });
       
       setProjects(prev => 
         prev.map(p => p.id === projectId ? updatedProject : p)
@@ -241,19 +225,11 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
       const updatedFiles = project.files.filter(file => file.id !== fileId);
       
       // Check if it's a mock project
-      const isMockProject = projectId.includes('mock') || 
-                           (generateMockProjects(user.email || '')?.some(p => p.id === projectId));
+      const isMockProject = isProjectMock(project, user.email);
       
-      if (!isMockProject) {
-        // Only update real projects in the database
-        await projectService.updateFile(projectId, updatedFiles);
-      }
+      await updateProjectFiles(projectId, updatedFiles, isMockProject);
       
-      const updatedProject = {
-        ...project,
-        files: updatedFiles,
-        updated_at: new Date().toISOString()
-      };
+      const updatedProject = createUpdatedProject(project, { files: updatedFiles });
       
       setProjects(prev => 
         prev.map(p => p.id === projectId ? updatedProject : p)
@@ -274,48 +250,47 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
     }
   };
 
-  const updateProjectContext = async (projectId: string, context: string) => {
+  const updateProjectField = async (
+    projectId: string, 
+    fieldName: 'knowledge_context' | 'knowledge_instructions', 
+    value: string, 
+    clientFieldName: 'customContext' | 'customInstructions'
+  ) => {
     if (!user) return;
 
     try {
       setLoading(true);
       
+      const project = projects.find(p => p.id === projectId);
+      if (!project) throw new Error('Project not found');
+      
       // Check if it's a mock project
-      const isMockProject = projectId.includes('mock') || 
-                           (generateMockProjects(user.email || '')?.some(p => p.id === projectId));
+      const isMockProject = isProjectMock(project, user.email);
       
       if (!isMockProject) {
         // Only update real projects in the database
-        await projectService.updateProjectField(projectId, 'knowledge_context', context);
+        await projectService.updateProjectField(projectId, fieldName, value);
       }
       
+      const updates: Partial<Project> = {
+        [fieldName]: value,
+        [clientFieldName]: value
+      };
+      
+      const updatedProject = createUpdatedProject(project, updates);
+      
       setProjects(prev => 
-        prev.map(project => {
-          if (project.id === projectId) {
-            return {
-              ...project,
-              knowledge_context: context,
-              customContext: context,
-              updated_at: new Date().toISOString()
-            };
-          }
-          return project;
-        })
+        prev.map(p => p.id === projectId ? updatedProject : p)
       );
       
       if (currentProject?.id === projectId) {
-        setCurrentProject(prev => prev ? {
-          ...prev,
-          knowledge_context: context,
-          customContext: context,
-          updated_at: new Date().toISOString()
-        } : null);
+        setCurrentProject(updatedProject);
       }
     } catch (error: any) {
-      console.error('Error updating project context:', error.message);
+      console.error(`Error updating project ${fieldName}:`, error.message);
       toast({
         title: 'Error',
-        description: 'Failed to update project context',
+        description: `Failed to update project ${fieldName}`,
         variant: 'destructive',
       });
     } finally {
@@ -323,53 +298,12 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
     }
   };
 
-  const updateProjectInstructions = async (projectId: string, instructions: string) => {
-    if (!user) return;
+  const updateProjectContext = async (projectId: string, context: string) => {
+    return updateProjectField(projectId, 'knowledge_context', context, 'customContext');
+  };
 
-    try {
-      setLoading(true);
-      
-      // Check if it's a mock project
-      const isMockProject = projectId.includes('mock') || 
-                           (generateMockProjects(user.email || '')?.some(p => p.id === projectId));
-      
-      if (!isMockProject) {
-        // Only update real projects in the database
-        await projectService.updateProjectField(projectId, 'knowledge_instructions', instructions);
-      }
-      
-      setProjects(prev => 
-        prev.map(project => {
-          if (project.id === projectId) {
-            return {
-              ...project,
-              knowledge_instructions: instructions,
-              customInstructions: instructions,
-              updated_at: new Date().toISOString()
-            };
-          }
-          return project;
-        })
-      );
-      
-      if (currentProject?.id === projectId) {
-        setCurrentProject(prev => prev ? {
-          ...prev,
-          knowledge_instructions: instructions,
-          customInstructions: instructions,
-          updated_at: new Date().toISOString()
-        } : null);
-      }
-    } catch (error: any) {
-      console.error('Error updating project instructions:', error.message);
-      toast({
-        title: 'Error',
-        description: 'Failed to update project instructions',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
+  const updateProjectInstructions = async (projectId: string, instructions: string) => {
+    return updateProjectField(projectId, 'knowledge_instructions', instructions, 'customInstructions');
   };
 
   return (
@@ -392,12 +326,4 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
       {children}
     </ProjectContext.Provider>
   );
-};
-
-export const useProjects = () => {
-  const context = useContext(ProjectContext);
-  if (context === undefined) {
-    throw new Error('useProjects must be used within a ProjectProvider');
-  }
-  return context;
 };

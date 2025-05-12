@@ -1,17 +1,22 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { useNavigate } from 'react-router-dom';
-import { useProjects } from '@/context/ProjectContext';
+import { useNavigate } from 'react-router';
+import { useProjects } from '@/context/project';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
+import { Plus } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import PromptTemplates from './PromptTemplates';
+import { supabase } from '@/integrations/supabase/client';
 
 const IntentionInput = () => {
   const [intention, setIntention] = useState('');
+  const [placeholder, setPlaceholder] = useState('Type your intention here... (e.g., Create a todo app with React and local storage)');
   const [isLoading, setIsLoading] = useState(false);
+  const [userHasInteracted, setUserHasInteracted] = useState(false);
   const navigate = useNavigate();
-  const { createProject, setCurrentProject } = useProjects();
+  const { createProjectFromIntention, setCurrentProject } = useProjects();
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -40,49 +45,32 @@ const IntentionInput = () => {
     setIsLoading(true);
     
     try {
-      // In a real app, this would be an API call to generate code
-      // For now, let's create a mock project with some sample files
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API call
-      
-      const mockFiles = [
+      // Initial empty project files structure
+      const initialFiles = [
         {
           id: crypto.randomUUID(),
-          name: 'index.html',
+          name: 'README.md',
           path: '/',
-          content: '<!DOCTYPE html>\n<html>\n<head>\n  <title>My App</title>\n</head>\n<body>\n  <div id="root"></div>\n  <script src="index.js"></script>\n</body>\n</html>',
-          type: 'html'
-        },
-        {
-          id: crypto.randomUUID(),
-          name: 'index.js',
-          path: '/',
-          content: 'import React from "react";\nimport ReactDOM from "react-dom";\nimport App from "./App";\n\nReactDOM.render(<App />, document.getElementById("root"));',
-          type: 'javascript'
-        },
-        {
-          id: crypto.randomUUID(),
-          name: 'App.js',
-          path: '/',
-          content: 'import React from "react";\n\nfunction App() {\n  return (\n    <div className="App">\n      <h1>Hello World</h1>\n    </div>\n  );\n}\n\nexport default App;',
-          type: 'javascript'
+          content: '# Project in progress\nYour project is being generated...',
+          type: 'markdown'
         }
       ];
       
-      const projectTitle = intention.slice(0, 30) + (intention.length > 30 ? '...' : '');
-      const newProject = await createProject(projectTitle, intention, mockFiles);
+      // Create project locally and set as current
+      const newProject = await createProjectFromIntention(intention, initialFiles);
       setCurrentProject(newProject);
       
       toast({
-        title: "Success!",
-        description: "Your project has been created",
+        title: "Project Created",
+        description: "Your project is being generated",
       });
       
       navigate(`/project/${newProject.id}`);
     } catch (error) {
-      console.error('Failed to process intention:', error);
+      console.error('Failed to create project:', error);
       toast({
         title: "Error",
-        description: "Failed to process your intention. Please try again.",
+        description: "Failed to create your project. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -90,23 +78,68 @@ const IntentionInput = () => {
     }
   };
 
+  // This function will update the placeholder text as templates rotate
+  const handleTemplatePlaceholderChange = (description: string) => {
+    // if user already has text in the intention field, don't change the placeholder
+    if (intention.trim()) return;
+    setPlaceholder(description);
+  };
+
+  const handleIntentionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setIntention(e.target.value);
+    if (e.target.value.trim()) {
+      setUserHasInteracted(true);
+    }
+  };
+
   return (
     <div className="w-full max-w-2xl mx-auto">
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="relative">
         <Textarea
-          placeholder="Type your intention here... (e.g., 'Create a todo app with React and local storage')"
+          placeholder={placeholder}
           value={intention}
-          onChange={(e) => setIntention(e.target.value)}
-          className="min-h-[150px] p-4 text-lg resize-y"
+          onChange={handleIntentionChange}
+          className="min-h-[120px] pr-24 resize-none text-lg"
         />
-        <Button 
-          type="submit" 
-          className="w-full"
-          disabled={isLoading}
-        >
-          {isLoading ? 'Generating...' : 'Generate Project'}
-        </Button>
-      </form>
+        <div className="absolute bottom-3 right-3 flex items-center gap-2">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  disabled={isLoading}
+                >
+                  <Plus className="h-5 w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Add attachment</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  onClick={handleSubmit}
+                  disabled={isLoading}
+                  size="sm"
+                  className="h-8"
+                >
+                  {isLoading ? 'Generating...' : 'Generate Project'}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Create a new project</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+      </div>
+      <PromptTemplates 
+        onSelectTemplate={(desc) => {
+          setIntention(desc);
+          setUserHasInteracted(true);
+        }} 
+        onTemplateChange={handleTemplatePlaceholderChange}
+        userHasInteracted={userHasInteracted}
+      />
     </div>
   );
 };

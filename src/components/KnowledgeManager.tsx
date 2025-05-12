@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { useProjects } from '@/context/ProjectContext';
+import { useProjects } from '@/context/project';
 import { toast } from '@/hooks/use-toast';
 import { Save } from 'lucide-react';
 
@@ -43,8 +43,8 @@ const KnowledgeManager: React.FC<KnowledgeManagerProps> = ({
       <Tabs defaultValue="context">
         <div className="bg-muted p-2">
           <TabsList>
-            <TabsTrigger value="context">Custom Context</TabsTrigger>
-            <TabsTrigger value="instructions">Custom Instructions</TabsTrigger>
+            <TabsTrigger value="context">Context</TabsTrigger>
+            <TabsTrigger value="instructions">Instructions</TabsTrigger>
           </TabsList>
         </div>
         
@@ -59,7 +59,7 @@ const KnowledgeManager: React.FC<KnowledgeManagerProps> = ({
             placeholder="Add custom context here..."
             className="min-h-[200px]"
           />
-          <Button onClick={handleSaveContext}>
+          <Button onClick={handleSaveContext} disabled={true}>
             <Save className="h-4 w-4 mr-2" />
             Save Context
           </Button>
@@ -76,7 +76,7 @@ const KnowledgeManager: React.FC<KnowledgeManagerProps> = ({
             placeholder="Add custom instructions here..."
             className="min-h-[200px]"
           />
-          <Button onClick={handleSaveInstructions}>
+          <Button onClick={handleSaveInstructions} disabled={true}>
             <Save className="h-4 w-4 mr-2" />
             Save Instructions
           </Button>

@@ -4,22 +4,20 @@ import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Link, Navigate, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router';
 import { toast } from '@/hooks/use-toast';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { login, user, isLoading } = useAuth();
+  const { login, user, session, isLoading } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   
   const from = (location.state as any)?.from || '/';
   
-  if (user && !isLoading) {
-    return <Navigate to={from} replace />;
-  }
-  
+  // Handle login submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -36,14 +34,43 @@ const LoginPage = () => {
     
     try {
       await login(email, password);
-    } catch (error) {
-      // Error is already handled in the login function
+      
+      // Redirect after successful login
+      navigate(from, { replace: true });
+    } catch (error: any) {
       console.error('Login failed:', error);
+      toast({
+        title: "Login failed",
+        description: error.message || "Invalid email or password",
+        variant: "destructive"
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // Redirect if already logged in
+  React.useEffect(() => {
+    if (user && session) {
+      console.log('User already logged in, redirecting to:', from);
+      navigate(from, { replace: true });
+    }
+  }, [user, session, from, navigate]);
+
+  // Show form instead of loading state for better user experience
+  if (isLoading && !user && !isSubmitting) {
+    return (
+      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-muted-foreground mb-2">Checking authentication...</p>
+          <Button variant="outline" onClick={() => window.location.reload()}>
+            Refresh Page
+          </Button>
+        </div>
+      </div>
+    );
+  }
+  
   return (
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
       <div className="w-full max-w-md p-8">
@@ -79,7 +106,11 @@ const LoginPage = () => {
             />
           </div>
           
-          <Button type="submit" className="w-full" disabled={isSubmitting || isLoading}>
+          <Button 
+            type="submit" 
+            className="w-full" 
+            disabled={isSubmitting}
+          >
             {isSubmitting ? 'Logging in...' : 'Log in'}
           </Button>
           
