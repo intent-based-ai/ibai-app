@@ -23,6 +23,7 @@ export const updateProjectFiles = async (
 ): Promise<void> => {
   if (isMockProject) {
     // For mock projects, we don't need to update the database
+    console.log('Mock project, skipping database update');
     return;
   }
   

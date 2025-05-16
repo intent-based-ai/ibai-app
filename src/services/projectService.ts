@@ -29,21 +29,56 @@ export const projectService = {
       }
 
       // Convert binary content to string for each file
-      const files = (filesData || []).map(file => ({
-        id: file.id,
-        name: file.path.split('/').pop() || 'unnamed', // Extract filename from path
-        path: file.path,
-        type: file.type,
-        content: file.content ? new TextDecoder().decode(file.content) : '',
-        isDirectory: file.type === 'directory'
-      }));
+      const files = (filesData || []).map(file => {
+        // Safe content decoding - check if content exists and is valid
+        let fileContent = '';
+        if (file.content) {
+          try {
+            // Handle both ArrayBuffer and string content formats
+            if (typeof file.content === 'string') {
+              fileContent = file.content;
+            } else {
+              const buffer = file.content.buffer || file.content;
+              fileContent = new TextDecoder().decode(buffer);
+            }
+          } catch (e) {
+            console.error(`Error decoding content for file ${file.id}:`, e);
+            fileContent = ''; // Default to empty content on error
+          }
+        }
+
+        return {
+          id: file.id,
+          name: file.path.split('/').pop() || 'unnamed', // Extract filename from path
+          path: file.path,
+          type: file.type,
+          content: fileContent,
+          isDirectory: file.type === 'directory'
+        };
+      });
+
+      // If code_files exists in the project, include that data too (for backwards compatibility)
+      let codeFiles: File[] = [];
+      if (project.code_files && Array.isArray(project.code_files)) {
+        codeFiles = project.code_files.map(file => ({
+          id: file.id || crypto.randomUUID(),
+          name: file.name,
+          path: file.path,
+          type: file.type,
+          content: file.content || '',
+          isDirectory: file.type === 'directory'
+        }));
+      }
+
+      // Combine files from both sources, with project_files taking precedence
+      const allFiles = [...codeFiles, ...files];
 
       // Return project with its files
       return {
         id: project.id,
         title: project.title,
         description: project.description,
-        files: files,
+        files: allFiles,
         name: project.title,
         knowledge_context: project.knowledge_context || '',
         knowledge_instructions: project.knowledge_instructions || '',
