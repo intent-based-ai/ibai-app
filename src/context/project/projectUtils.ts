@@ -1,22 +1,14 @@
 
-import { Project, File } from '@/types/project';
+import { Project } from '@/types/project';
 import { projectService } from '@/services/projectService';
-import { useMockProjects } from '@/hooks/useMockProjects';
 
-export const isProjectMock = (project: Project, userEmail: string | null): boolean => {
-  if (!userEmail) return false;
-  
-  const { generateMockProjects } = useMockProjects();
-  const mockProjects = generateMockProjects(userEmail);
-  
+export const isProjectMock = (project: Project, userEmail?: string): boolean => {
+  // Logic to identify if a project is a mock project
   return project.id.includes('mock') || 
-         (mockProjects?.some(p => p.id === project.id) || false);
+         (userEmail?.includes('demo') && project.id.startsWith('demo-'));
 };
 
-export const createUpdatedProject = (
-  project: Project, 
-  updates: Partial<Project>
-): Project => {
+export const createUpdatedProject = (project: Project, updates: Partial<Project>): Project => {
   return {
     ...project,
     ...updates,
@@ -26,10 +18,14 @@ export const createUpdatedProject = (
 
 export const updateProjectFiles = async (
   projectId: string, 
-  updatedFiles: File[], 
-  isMock: boolean
+  updatedFiles: Project['files'], 
+  isMockProject: boolean
 ): Promise<void> => {
-  if (!isMock) {
-    await projectService.updateFile(projectId, updatedFiles);
+  if (isMockProject) {
+    // For mock projects, we don't need to update the database
+    return;
   }
+  
+  // For real projects, update files in database
+  await projectService.updateFile(projectId, updatedFiles);
 };
