@@ -136,6 +136,7 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
     }
   };
 
+  // Create module for file operations
   const addFile = async (projectId: string, file: Omit<File, 'id'>) => {
     if (!user) return;
 
