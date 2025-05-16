@@ -1,6 +1,5 @@
-
 import { Project } from '@/types/project';
-import { projectService } from '@/services/projectService';
+import { projectService } from '@/services/project';
 
 export const isProjectMock = (project: Project, userEmail?: string): boolean => {
   // Logic to identify if a project is a mock project

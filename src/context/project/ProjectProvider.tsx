@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { Project, File } from '@/types/project';
-import { projectService } from '@/services/projectService';
+import { projectService } from '@/services/project';
 import { useMockProjects } from '@/hooks/useMockProjects';
 import { useAuth } from '@/context/AuthContext';
 import ProjectContext from './ProjectContext';
